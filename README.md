@@ -663,16 +663,11 @@ pm2 monit
 
 #### Cloud Deployment (AWS/GCP/Azure)
 ```bash
-# Use Helm chart for cloud deployment
-helm install mcp-browser-control ./helm/mcp-browser-control \
-  --set image.tag=latest \
-  --set autoscaling.enabled=true \
-  --set autoscaling.maxReplicas=10
+# Use Kubernetes manifests for cloud deployment
+kubectl apply -f k8s/deployment.yaml
 
-# Configure cloud-specific settings
-helm upgrade mcp-browser-control ./helm/mcp-browser-control \
-  --set cloudProvider=aws \
-  --set persistence.enabled=true
+# Configure cloud-specific settings as needed
+# kubectl edit deployment mcp-browser-control
 ```
 
 ## Architecture
