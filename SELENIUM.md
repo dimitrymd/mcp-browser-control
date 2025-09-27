@@ -48,7 +48,7 @@ brew install --cask google-chrome
 #### 2. Install MCP Browser Control Server
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/dimitrymd/mcp-browser-control.git
 cd mcp-browser-control
 
 # Install dependencies (includes selenium-webdriver)
