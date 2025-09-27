@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Testing Page - MCP Browser Control</title>
+    <style>
+        .video-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9e9e9;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .metric {
+            padding: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .metric-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .metric-value {
+            color: #666;
+            font-family: monospace;
+        }
+        video {
+            max-width: 100%;
+            height: auto;
+        }
+        .quality-selector {
+            margin: 10px 0;
+        }
+        .sync-test {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .sync-video, .sync-audio {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 MCP Browser Control Server - Revolutionary Video Testing Page</h1>
+    <p>This page demonstrates comprehensive video testing capabilities including real playback detection, quality analysis, and synchronization testing.</p>
+
+    <div class="video-container">
+        <h2>🎬 Main Video Player (MP4 - 1080p)</h2>
+        <video id="main-video" controls preload="metadata" width="640" height="360">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.webm" type="video/webm">
+            <track kind="captions" src="captions-en.vtt" srclang="en" label="English" default>
+            <track kind="descriptions" src="descriptions-en.vtt" srclang="en" label="Audio Description">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="controls">
+            <button onclick="playVideo('main-video')">▶️ Play</button>
+            <button onclick="pauseVideo('main-video')">⏸️ Pause</button>
+            <button onclick="stopVideo('main-video')">⏹️ Stop</button>
+            <button onclick="muteVideo('main-video')">🔇 Toggle Mute</button>
+            <button onclick="fullscreenVideo('main-video')">🔲 Fullscreen</button>
+            <button onclick="pipVideo('main-video')">📺 Picture-in-Picture</button>
+        </div>
+
+        <div class="quality-selector">
+            <label>Quality: </label>
+            <select onchange="changeQuality('main-video', this.value)">
+                <option value="auto">Auto</option>
+                <option value="1080p">1080p</option>
+                <option value="720p">720p</option>
+                <option value="480p">480p</option>
+                <option value="360p">360p</option>
+            </select>
+
+            <label style="margin-left: 20px;">Speed: </label>
+            <select onchange="changeSpeed('main-video', this.value)">
+                <option value="0.25">0.25x</option>
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+            </select>
+        </div>
+
+        <div class="status" id="main-status">Ready</div>
+
+        <div class="metrics" id="main-metrics">
+            <div class="metric">
+                <div class="metric-label">Resolution</div>
+                <div class="metric-value" id="main-resolution">-</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Frame Rate</div>
+                <div class="metric-value" id="main-framerate">-</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Bitrate</div>
+                <div class="metric-value" id="main-bitrate">-</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Buffer Health</div>
+                <div class="metric-value" id="main-buffer">-</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Dropped Frames</div>
+                <div class="metric-value" id="main-dropped">-</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Quality Score</div>
+                <div class="metric-value" id="main-score">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="video-container">
+        <h2>🎥 Secondary Video (WebM - 720p)</h2>
+        <video id="secondary-video" controls loop width="480" height="270">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.webm" type="video/webm">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="controls">
+            <button onclick="playVideo('secondary-video')">▶️ Play</button>
+            <button onclick="pauseVideo('secondary-video')">⏸️ Pause</button>
+            <button onclick="seekVideo('secondary-video', 30)">⏭️ Seek to 30s</button>
+            <button onclick="setVolume('secondary-video', 0.5)">🔉 50% Volume</button>
+        </div>
+
+        <div class="status" id="secondary-status">Ready</div>
+    </div>
+
+    <div class="video-container">
+        <h2>🎭 Auto-play Video (Short Clip)</h2>
+        <video id="autoplay-video" controls autoplay muted loop width="320" height="180">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="status" id="autoplay-status">Auto-playing</div>
+    </div>
+
+    <div class="video-container">
+        <h2>🔄 Synchronization Testing</h2>
+        <div class="sync-test">
+            <div class="sync-video">
+                <h3>📹 Video Track</h3>
+                <video id="sync-video" controls width="400" height="225">
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    Your browser does not support the video element.
+                </video>
+            </div>
+            <div class="sync-audio">
+                <h3>🎵 Audio Track</h3>
+                <audio id="sync-audio" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="audio/mp4">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="startSyncTest()">🔄 Start Sync Test</button>
+            <button onclick="stopSyncTest()">⏹️ Stop Sync Test</button>
+            <button onclick="analyzeSync()">📊 Analyze Sync</button>
+        </div>
+
+        <div class="status" id="sync-status">Ready for sync testing</div>
+    </div>
+
+    <div class="video-container">
+        <h2>❌ Error Testing Videos</h2>
+
+        <h3>No Source Video</h3>
+        <video id="no-source-video" controls width="320" height="180">
+            <!-- No source elements -->
+            Your browser does not support the video element.
+        </video>
+
+        <h3>Invalid Source Video</h3>
+        <video id="invalid-source-video" controls width="320" height="180">
+            <source src="https://invalid.example.com/nonexistent.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="controls">
+            <button onclick="testErrorScenarios()">🧪 Test Error Scenarios</button>
+        </div>
+
+        <div class="status" id="error-status">Error scenarios ready</div>
+    </div>
+
+    <div class="video-container">
+        <h2>📊 Performance Testing</h2>
+        <video id="performance-video" controls width="640" height="360">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="controls">
+            <button onclick="startPerformanceTest()">⚡ Start Performance Test</button>
+            <button onclick="stressTest()">🔥 Stress Test</button>
+            <button onclick="qualityAnalysis()">📈 Quality Analysis</button>
+        </div>
+
+        <div class="status" id="performance-status">Performance testing ready</div>
+    </div>
+
+    <script>
+        // Video control functions
+        function playVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.play().then(() => {
+                    updateStatus(videoId, 'Playing');
+                    startMetricsMonitoring(videoId);
+                }).catch(err => {
+                    updateStatus(videoId, 'Error: ' + err.message);
+                });
+            }
+        }
+
+        function pauseVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.pause();
+                updateStatus(videoId, 'Paused');
+                stopMetricsMonitoring(videoId);
+            }
+        }
+
+        function stopVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+                updateStatus(videoId, 'Stopped');
+                stopMetricsMonitoring(videoId);
+            }
+        }
+
+        function muteVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.muted = !video.muted;
+                updateStatus(videoId, video.muted ? 'Muted' : 'Unmuted');
+            }
+        }
+
+        function fullscreenVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video && video.requestFullscreen) {
+                video.requestFullscreen().then(() => {
+                    updateStatus(videoId, 'Fullscreen');
+                }).catch(err => {
+                    updateStatus(videoId, 'Fullscreen error: ' + err.message);
+                });
+            }
+        }
+
+        function pipVideo(videoId) {
+            const video = document.getElementById(videoId);
+            if (video && video.requestPictureInPicture) {
+                video.requestPictureInPicture().then(() => {
+                    updateStatus(videoId, 'Picture-in-Picture');
+                }).catch(err => {
+                    updateStatus(videoId, 'PiP error: ' + err.message);
+                });
+            }
+        }
+
+        function seekVideo(videoId, time) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.currentTime = time;
+                updateStatus(videoId, 'Seeked to ' + time + 's');
+            }
+        }
+
+        function setVolume(videoId, volume) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.volume = volume;
+                updateStatus(videoId, 'Volume: ' + Math.round(volume * 100) + '%');
+            }
+        }
+
+        function changeQuality(videoId, quality) {
+            updateStatus(videoId, 'Quality changed to: ' + quality);
+            // Note: Real quality changing would require MediaSource API integration
+        }
+
+        function changeSpeed(videoId, speed) {
+            const video = document.getElementById(videoId);
+            if (video) {
+                video.playbackRate = parseFloat(speed);
+                updateStatus(videoId, 'Speed: ' + speed + 'x');
+            }
+        }
+
+        function updateStatus(videoId, message) {
+            const statusElement = document.getElementById(videoId.replace('video', 'status'));
+            if (statusElement) {
+                statusElement.textContent = message + ' - ' + new Date().toLocaleTimeString();
+            }
+        }
+
+        // Metrics monitoring
+        const monitoringIntervals = new Map();
+
+        function startMetricsMonitoring(videoId) {
+            const video = document.getElementById(videoId);
+            if (!video) return;
+
+            stopMetricsMonitoring(videoId); // Clear any existing monitoring
+
+            const interval = setInterval(() => {
+                updateVideoMetrics(videoId);
+            }, 500);
+
+            monitoringIntervals.set(videoId, interval);
+        }
+
+        function stopMetricsMonitoring(videoId) {
+            const interval = monitoringIntervals.get(videoId);
+            if (interval) {
+                clearInterval(interval);
+                monitoringIntervals.delete(videoId);
+            }
+        }
+
+        function updateVideoMetrics(videoId) {
+            const video = document.getElementById(videoId);
+            if (!video) return;
+
+            // Resolution
+            const resolutionEl = document.getElementById(videoId.replace('video', 'resolution'));
+            if (resolutionEl) {
+                resolutionEl.textContent = `${video.videoWidth || 0} x ${video.videoHeight || 0}`;
+            }
+
+            // Frame rate (estimated)
+            const frameRateEl = document.getElementById(videoId.replace('video', 'framerate'));
+            if (frameRateEl && video.webkitDecodedFrameCount !== undefined) {
+                const fps = video.webkitDecodedFrameCount / video.currentTime || 0;
+                frameRateEl.textContent = fps.toFixed(1) + ' FPS';
+            }
+
+            // Buffer health
+            const bufferEl = document.getElementById(videoId.replace('video', 'buffer'));
+            if (bufferEl && video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferAhead = Math.max(0, bufferedEnd - video.currentTime);
+                bufferEl.textContent = bufferAhead.toFixed(1) + 's';
+            }
+
+            // Dropped frames
+            const droppedEl = document.getElementById(videoId.replace('video', 'dropped'));
+            if (droppedEl && video.webkitDroppedFrameCount !== undefined) {
+                const dropRate = video.webkitDecodedFrameCount > 0 ?
+                    (video.webkitDroppedFrameCount / video.webkitDecodedFrameCount * 100) : 0;
+                droppedEl.textContent = `${video.webkitDroppedFrameCount} (${dropRate.toFixed(1)}%)`;
+            }
+
+            // Quality score (calculated)
+            const scoreEl = document.getElementById(videoId.replace('video', 'score'));
+            if (scoreEl) {
+                let score = 100;
+                if (video.webkitDecodedFrameCount > 0) {
+                    const dropRate = video.webkitDroppedFrameCount / video.webkitDecodedFrameCount;
+                    score -= dropRate * 50;
+                }
+                if (video.videoWidth < 720) score -= 10;
+                scoreEl.textContent = Math.max(0, score).toFixed(0) + '/100';
+            }
+        }
+
+        // Synchronization testing
+        let syncTestInterval = null;
+        let syncStartTime = 0;
+
+        function startSyncTest() {
+            const video = document.getElementById('sync-video');
+            const audio = document.getElementById('sync-audio');
+
+            if (video && audio) {
+                // Start both simultaneously
+                syncStartTime = performance.now();
+                Promise.all([video.play(), audio.play()]).then(() => {
+                    updateStatus('sync', 'Sync test started');
+
+                    // Monitor sync continuously
+                    syncTestInterval = setInterval(() => {
+                        const videoTime = video.currentTime;
+                        const audioTime = audio.currentTime;
+                        const offset = Math.abs(videoTime - audioTime);
+
+                        updateStatus('sync', `Video: ${videoTime.toFixed(2)}s, Audio: ${audioTime.toFixed(2)}s, Offset: ${offset.toFixed(3)}s`);
+
+                        if (offset > 0.5) {
+                            updateStatus('sync', '⚠️ SYNC ISSUE: Offset > 0.5s');
+                        }
+                    }, 100);
+
+                }).catch(err => {
+                    updateStatus('sync', 'Sync test error: ' + err.message);
+                });
+            }
+        }
+
+        function stopSyncTest() {
+            if (syncTestInterval) {
+                clearInterval(syncTestInterval);
+                syncTestInterval = null;
+            }
+
+            const video = document.getElementById('sync-video');
+            const audio = document.getElementById('sync-audio');
+
+            if (video) video.pause();
+            if (audio) audio.pause();
+
+            updateStatus('sync', 'Sync test stopped');
+        }
+
+        function analyzeSync() {
+            const video = document.getElementById('sync-video');
+            const audio = document.getElementById('sync-audio');
+
+            if (video && audio) {
+                const videoTime = video.currentTime;
+                const audioTime = audio.currentTime;
+                const offset = Math.abs(videoTime - audioTime);
+                const inSync = offset <= 0.1;
+
+                updateStatus('sync', `Analysis: ${inSync ? '✅ IN SYNC' : '❌ OUT OF SYNC'} (${offset.toFixed(3)}s offset)`);
+            }
+        }
+
+        // Performance testing
+        function startPerformanceTest() {
+            const video = document.getElementById('performance-video');
+            if (video) {
+                updateStatus('performance', 'Starting performance analysis...');
+
+                // Start video and monitor performance
+                video.play().then(() => {
+                    let frameCount = 0;
+                    let lastFrameTime = performance.now();
+
+                    const monitorPerformance = () => {
+                        frameCount++;
+                        const currentTime = performance.now();
+
+                        if (currentTime - lastFrameTime >= 1000) {
+                            const fps = frameCount;
+                            frameCount = 0;
+                            lastFrameTime = currentTime;
+
+                            updateStatus('performance', `Performance: ${fps} FPS, CPU usage monitoring...`);
+                        }
+
+                        if (!video.paused && !video.ended) {
+                            requestAnimationFrame(monitorPerformance);
+                        }
+                    };
+
+                    requestAnimationFrame(monitorPerformance);
+                });
+            }
+        }
+
+        function stressTest() {
+            updateStatus('performance', 'Running stress test with multiple operations...');
+
+            // Simulate stress by rapid seeking
+            const video = document.getElementById('performance-video');
+            if (video) {
+                let seekCount = 0;
+                const stressInterval = setInterval(() => {
+                    video.currentTime = Math.random() * (video.duration || 60);
+                    seekCount++;
+
+                    if (seekCount >= 20) {
+                        clearInterval(stressInterval);
+                        updateStatus('performance', 'Stress test completed: ' + seekCount + ' seeks');
+                    }
+                }, 200);
+            }
+        }
+
+        function qualityAnalysis() {
+            const video = document.getElementById('performance-video');
+            if (video) {
+                updateStatus('performance', 'Analyzing video quality...');
+
+                setTimeout(() => {
+                    const analysis = {
+                        resolution: `${video.videoWidth}x${video.videoHeight}`,
+                        duration: video.duration?.toFixed(1) + 's',
+                        readyState: video.readyState,
+                        networkState: video.networkState,
+                        decodedFrames: video.webkitDecodedFrameCount || 'N/A',
+                        droppedFrames: video.webkitDroppedFrameCount || 'N/A'
+                    };
+
+                    updateStatus('performance', 'Quality: ' + JSON.stringify(analysis));
+                }, 1000);
+            }
+        }
+
+        function testErrorScenarios() {
+            updateStatus('error', 'Testing error scenarios...');
+
+            // Test no-source video
+            const noSourceVideo = document.getElementById('no-source-video');
+            if (noSourceVideo) {
+                noSourceVideo.play().catch(err => {
+                    updateStatus('error', 'No source error: ' + err.message);
+                });
+            }
+
+            // Test invalid source video
+            const invalidVideo = document.getElementById('invalid-source-video');
+            if (invalidVideo) {
+                invalidVideo.play().catch(err => {
+                    updateStatus('error', 'Invalid source error: ' + err.message);
+                });
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎬 Video testing page loaded');
+
+            // Find all video elements
+            const videoElements = document.querySelectorAll('video');
+            console.log(`Found ${videoElements.length} video elements`);
+
+            // Add comprehensive event listeners for testing
+            videoElements.forEach((video, index) => {
+                const videoId = video.id || `video-${index}`;
+
+                // Add all video event listeners
+                const events = [
+                    'loadstart', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough',
+                    'play', 'pause', 'ended', 'timeupdate', 'volumechange', 'ratechange',
+                    'stalled', 'waiting', 'seeking', 'seeked', 'error', 'resize',
+                    'enterpictureinpicture', 'leavepictureinpicture'
+                ];
+
+                events.forEach(eventType => {
+                    video.addEventListener(eventType, function(event) {
+                        console.log(`🎬 Video Event [${videoId}]: ${event.type}`, {
+                            currentTime: video.currentTime,
+                            duration: video.duration,
+                            paused: video.paused,
+                            volume: video.volume,
+                            muted: video.muted,
+                            readyState: video.readyState,
+                            networkState: video.networkState,
+                            videoWidth: video.videoWidth,
+                            videoHeight: video.videoHeight,
+                            playbackRate: video.playbackRate,
+                            webkitDecodedFrameCount: video.webkitDecodedFrameCount,
+                            webkitDroppedFrameCount: video.webkitDroppedFrameCount
+                        });
+                    });
+                });
+
+                // Special handling for error events
+                video.addEventListener('error', function(event) {
+                    console.error(`🎬 Video Error [${videoId}]:`, {
+                        error: video.error,
+                        code: video.error ? video.error.code : 'unknown',
+                        message: video.error ? video.error.message : 'unknown error'
+                    });
+                    updateStatus(videoId, 'Error: ' + (video.error ? video.error.message : 'Unknown error'));
+                });
+
+                // Quality change detection
+                video.addEventListener('resize', function() {
+                    console.log(`🎬 Quality Change [${videoId}]:`, {
+                        newResolution: `${video.videoWidth}x${video.videoHeight}`,
+                        aspectRatio: video.videoWidth / video.videoHeight
+                    });
+                });
+            });
+
+            // Test autoplay policies
+            const autoplayVideo = document.getElementById('autoplay-video');
+            if (autoplayVideo) {
+                setTimeout(() => {
+                    if (autoplayVideo.paused) {
+                        updateStatus('autoplay', 'Autoplay blocked by browser policy');
+                    } else {
+                        updateStatus('autoplay', 'Autoplay successful');
+                        startMetricsMonitoring('autoplay-video');
+                    }
+                }, 1000);
+            }
+        });
+
+        // Video analysis utilities for MCP testing
+        window.analyzeVideoElement = function(videoId) {
+            const video = document.getElementById(videoId);
+            if (!video) return null;
+
+            return {
+                id: videoId,
+                tagName: video.tagName,
+                src: video.src || video.currentSrc,
+                currentTime: video.currentTime,
+                duration: video.duration,
+                paused: video.paused,
+                ended: video.ended,
+                muted: video.muted,
+                volume: video.volume,
+                playbackRate: video.playbackRate,
+                readyState: video.readyState,
+                networkState: video.networkState,
+                videoWidth: video.videoWidth,
+                videoHeight: video.videoHeight,
+                poster: video.poster,
+                preload: video.preload,
+                autoplay: video.autoplay,
+                loop: video.loop,
+                controls: video.controls,
+                crossOrigin: video.crossOrigin,
+                playsinline: video.playsInline,
+                webkitDecodedFrameCount: video.webkitDecodedFrameCount,
+                webkitDroppedFrameCount: video.webkitDroppedFrameCount,
+                webkitVideoDecodedByteCount: video.webkitVideoDecodedByteCount,
+                buffered: video.buffered ? {
+                    length: video.buffered.length,
+                    ranges: Array.from({length: video.buffered.length}, (_, i) => ({
+                        start: video.buffered.start(i),
+                        end: video.buffered.end(i)
+                    }))
+                } : null,
+                hasSource: !!(video.src || video.currentSrc || video.querySelector('source')),
+                isPlaying: !video.paused && !video.ended && video.currentTime > 0,
+                aspectRatio: video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 0,
+                qualityLevel: video.videoHeight >= 1080 ? '1080p' :
+                             video.videoHeight >= 720 ? '720p' :
+                             video.videoHeight >= 480 ? '480p' : '360p'
+            };
+        };
+
+        // Performance monitoring utilities
+        window.monitorVideoPerformance = function(videoId, duration = 10000) {
+            const video = document.getElementById(videoId);
+            if (!video) return Promise.resolve([]);
+
+            const samples = [];
+            const startTime = Date.now();
+            let lastFrameCount = video.webkitDecodedFrameCount || 0;
+
+            return new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    const now = Date.now();
+                    if (now - startTime >= duration) {
+                        clearInterval(interval);
+                        resolve(samples);
+                        return;
+                    }
+
+                    const currentFrameCount = video.webkitDecodedFrameCount || 0;
+                    const framesSinceLastSample = currentFrameCount - lastFrameCount;
+                    lastFrameCount = currentFrameCount;
+
+                    samples.push({
+                        timestamp: now,
+                        currentTime: video.currentTime,
+                        frameCount: currentFrameCount,
+                        droppedFrames: video.webkitDroppedFrameCount || 0,
+                        buffered: video.buffered && video.buffered.length > 0 ?
+                            video.buffered.end(video.buffered.length - 1) : 0,
+                        readyState: video.readyState,
+                        networkState: video.networkState,
+                        videoWidth: video.videoWidth,
+                        videoHeight: video.videoHeight,
+                        frameRate: framesSinceLastSample / 0.5, // Approximate FPS
+                        qualityLevel: video.videoHeight >= 1080 ? '1080p' :
+                                     video.videoHeight >= 720 ? '720p' :
+                                     video.videoHeight >= 480 ? '480p' : '360p'
+                    });
+                }, 500);
+            });
+        };
+
+        // Video format support testing
+        window.testVideoFormats = function() {
+            const video = document.createElement('video');
+            const formats = [
+                'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+                'video/webm; codecs="vp8, vorbis"',
+                'video/webm; codecs="vp9, opus"',
+                'video/ogg; codecs="theora, vorbis"',
+                'video/mp4; codecs="avc1.4D401E"', // H.264 Main Profile
+                'video/mp4; codecs="avc1.64001E"'  // H.264 High Profile
+            ];
+
+            const support = {};
+            formats.forEach(format => {
+                const canPlay = video.canPlayType(format);
+                support[format] = {
+                    canPlay: canPlay,
+                    supported: canPlay === 'probably' || canPlay === 'maybe'
+                };
+            });
+
+            console.log('🎬 Video format support:', support);
+            return support;
+        };
+
+        // Advanced video testing utilities
+        window.detectVideoIssues = function(videoId) {
+            const video = document.getElementById(videoId);
+            if (!video) return [];
+
+            const issues = [];
+
+            // Check for no source
+            if (!video.src && !video.currentSrc && !video.querySelector('source')) {
+                issues.push({
+                    type: 'no-video',
+                    severity: 'high',
+                    description: 'Video element has no source'
+                });
+            }
+
+            // Check for loading issues
+            if (video.networkState === 3) {
+                issues.push({
+                    type: 'network-issue',
+                    severity: 'high',
+                    description: 'Video source could not be loaded'
+                });
+            }
+
+            // Check for frame drops
+            if (video.webkitDroppedFrameCount && video.webkitDecodedFrameCount) {
+                const dropRate = video.webkitDroppedFrameCount / video.webkitDecodedFrameCount;
+                if (dropRate > 0.05) {
+                    issues.push({
+                        type: 'poor-quality',
+                        severity: dropRate > 0.1 ? 'high' : 'medium',
+                        description: `High frame drop rate: ${(dropRate * 100).toFixed(1)}%`
+                    });
+                }
+            }
+
+            // Check resolution
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+                issues.push({
+                    type: 'no-video',
+                    severity: 'medium',
+                    description: 'Video has zero dimensions'
+                });
+            }
+
+            return issues;
+        };
+
+        // Global error handler for video testing
+        window.addEventListener('error', function(event) {
+            console.error('🎬 Global video error:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('🎬 Unhandled video promise rejection:', event.reason);
+        });
+
+        // Test format support on load
+        document.addEventListener('DOMContentLoaded', function() {
+            window.testVideoFormats();
+        });
+    </script>
+</body>
+</html>

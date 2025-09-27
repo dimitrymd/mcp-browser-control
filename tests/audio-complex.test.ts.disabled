@@ -1,0 +1,641 @@
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
+import { WebDriver, WebElement } from 'selenium-webdriver';
+import winston from 'winston';
+
+import { AudioTools } from '../src/tools/audio.js';
+import { SessionManager } from '../src/drivers/session.js';
+import { WebDriverManager } from '../src/drivers/manager.js';
+import { findAudioElements, extractAudioElementInfo } from '../src/utils/audio.js';
+import { findElementWithRetry } from '../src/utils/elements.js';
+
+// Mock the audio utilities
+vi.mock('../src/utils/audio.js', () => ({
+  findAudioElements: vi.fn(),
+  extractAudioElementInfo: vi.fn(),
+  isAudioActuallyPlaying: vi.fn(),
+  getAudioState: vi.fn(),
+  detectAudioIssues: vi.fn(),
+  generateAudioRecommendations: vi.fn(),
+  monitorAudioPerformance: vi.fn()
+}));
+
+// Mock the elements utility
+vi.mock('../src/utils/elements.js', () => ({
+  findElementWithRetry: vi.fn()
+}));
+
+// Mock logger
+const mockLogger = winston.createLogger({
+  level: 'error',
+  silent: true,
+  transports: [],
+});
+
+describe('AudioTools', () => {
+  let audioTools: AudioTools;
+  let sessionManager: SessionManager;
+  let driverManager: WebDriverManager;
+  let mockDriver: any;
+  let mockAudioElement: any;
+
+  beforeAll(() => {
+    vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    // Reset all mocks first
+    vi.clearAllMocks();
+
+    // Mock audio element
+    mockAudioElement = {
+      getTagName: vi.fn().mockResolvedValue('audio'),
+      getAttribute: vi.fn().mockImplementation((attr: string) => {
+        const attributes: Record<string, string> = {
+          'src': 'https://example.com/audio.mp3',
+          'controls': 'true',
+          'autoplay': 'false'
+        };
+        return Promise.resolve(attributes[attr] || null);
+      }),
+      click: vi.fn().mockResolvedValue(undefined)
+    };
+
+    // Mock driver
+    mockDriver = {
+      findElement: vi.fn().mockResolvedValue(mockAudioElement),
+      findElements: vi.fn().mockResolvedValue([mockAudioElement]),
+      executeScript: vi.fn().mockImplementation((script: string) => {
+        // Mock different script executions based on content
+        if (script.includes('currentTime')) {
+          return Promise.resolve({
+            currentTime: 10.5,
+            duration: 120.0,
+            paused: false,
+            ended: false,
+            muted: false,
+            volume: 0.8,
+            playbackRate: 1.0,
+            readyState: 4,
+            networkState: 1
+          });
+        }
+        if (script.includes('tagName')) {
+          return Promise.resolve('audio');
+        }
+        if (script.includes('Promise')) {
+          return Promise.resolve({
+            events: [],
+            summary: {
+              playCount: 1,
+              pauseCount: 0,
+              totalPlayTime: 10.5,
+              bufferingEvents: 0,
+              errors: []
+            }
+          });
+        }
+        return Promise.resolve(true);
+      }),
+      manage: vi.fn().mockReturnValue({
+        getCookies: vi.fn().mockResolvedValue([]),
+        addCookie: vi.fn().mockResolvedValue(undefined),
+        deleteCookie: vi.fn().mockResolvedValue(undefined),
+        deleteAllCookies: vi.fn().mockResolvedValue(undefined)
+      }),
+      switchTo: vi.fn().mockReturnValue({
+        alert: vi.fn().mockResolvedValue({
+          getText: vi.fn().mockResolvedValue('Test alert'),
+          accept: vi.fn().mockResolvedValue(undefined),
+          dismiss: vi.fn().mockResolvedValue(undefined),
+          sendKeys: vi.fn().mockResolvedValue(undefined)
+        })
+      })
+    };
+
+    // Mock driver manager
+    driverManager = {
+      createDriver: vi.fn().mockResolvedValue(mockDriver as WebDriver),
+      validateDriver: vi.fn().mockResolvedValue(true),
+      closeDriver: vi.fn().mockResolvedValue(undefined),
+      checkDriverHealth: vi.fn().mockResolvedValue({
+        isHealthy: true,
+        details: { canNavigate: true, canExecuteScript: true, responseTime: 100 }
+      })
+    } as any;
+
+    // Create session manager
+    sessionManager = new SessionManager(driverManager, mockLogger, 5, 600000);
+
+    // Create audio tools
+    audioTools = new AudioTools(sessionManager, mockLogger);
+
+    // Setup mocks for utilities after creating objects
+    vi.mocked(findElementWithRetry).mockResolvedValue(mockAudioElement as any);
+    vi.mocked(findAudioElements).mockResolvedValue([
+      { element: mockAudioElement, selector: '#audio-player' }
+    ]);
+    vi.mocked(extractAudioElementInfo).mockResolvedValue({
+      selector: '#audio-player',
+      tagName: 'audio',
+      currentTime: 10.5,
+      duration: 120.0,
+      paused: false,
+      ended: false,
+      muted: false,
+      volume: 0.8,
+      playbackRate: 1.0,
+      buffered: [{ start: 0, end: 15.0 }],
+      src: 'https://example.com/audio.mp3',
+      currentSrc: 'https://example.com/audio.mp3',
+      readyState: 4,
+      networkState: 1
+    });
+
+    // Setup additional audio utility mocks
+    const audioUtils = vi.mocked(await import('../src/utils/audio.js'));
+    audioUtils.isAudioActuallyPlaying = vi.fn().mockResolvedValue(true);
+    audioUtils.getAudioState = vi.fn().mockResolvedValue({
+      currentTime: 10.5,
+      duration: 120.0,
+      paused: false,
+      muted: false,
+      volume: 0.8,
+      playbackRate: 1.0,
+      ended: false,
+      readyState: 4
+    });
+    audioUtils.detectAudioIssues = vi.fn().mockResolvedValue([]);
+    audioUtils.generateAudioRecommendations = vi.fn().mockReturnValue(['Audio playback appears normal']);
+    audioUtils.monitorAudioPerformance = vi.fn().mockResolvedValue({
+      samples: [{ timestamp: 1000, currentTime: 0, buffered: 5 }],
+      issues: []
+    });
+  });
+
+  afterEach(async () => {
+    await sessionManager.shutdown();
+    vi.clearAllMocks();
+  });
+
+  describe('checkAudioPlaying', () => {
+    it('should detect audio playback for specific element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        checkInterval: 100,
+        sampleDuration: 500
+      };
+
+      const result = await audioTools.checkAudioPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.isPlaying).toBe(true);
+      expect(result.data?.elements).toHaveLength(1);
+      expect(result.data?.activeCount).toBe(1);
+      expect(result.data?.elements[0].selector).toBe('#audio-player');
+      expect(result.data?.elements[0].tagName).toBe('audio');
+    });
+
+    it('should scan all audio elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        checkInterval: 50,
+        sampleDuration: 200
+      };
+
+      const result = await audioTools.checkAudioPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.elements).toHaveLength(1);
+      expect(result.data?.elements[0].tagName).toBe('audio');
+    });
+
+    it('should validate selector points to audio/video element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock non-audio element
+      const divElement = {
+        ...mockAudioElement,
+        getTagName: vi.fn().mockResolvedValue('div')
+      };
+      vi.mocked(findElementWithRetry).mockResolvedValue(divElement as any);
+
+      const params = {
+        selector: '#not-audio'
+      };
+
+      const result = await audioTools.checkAudioPlaying(params, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should handle audio elements with no source', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      vi.mocked(extractAudioElementInfo).mockResolvedValue({
+        selector: '#audio-no-source',
+        tagName: 'audio',
+        currentTime: 0,
+        duration: 0,
+        paused: true,
+        ended: false,
+        muted: false,
+        volume: 1,
+        playbackRate: 1,
+        buffered: [],
+        src: '',
+        currentSrc: '',
+        readyState: 0,
+        networkState: 0
+      });
+
+      const params = {
+        selector: '#audio-no-source'
+      };
+
+      const result = await audioTools.checkAudioPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.isPlaying).toBe(false);
+      expect(result.data?.activeCount).toBe(0);
+    });
+  });
+
+  describe('getAudioElements', () => {
+    it('should find all audio elements on page', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        includeIframes: false,
+        onlyWithSource: false
+      };
+
+      const result = await audioTools.getAudioElements(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.total).toBe(1);
+      expect(result.data?.byType.audio).toBe(1);
+      expect(result.data?.byType.video).toBe(0);
+      expect(result.data?.elements[0].tagName).toBe('audio');
+    });
+
+    it('should filter elements with sources only', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        onlyWithSource: true
+      };
+
+      const result = await audioTools.getAudioElements(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.elements.every(el => el.hasSource)).toBe(true);
+    });
+
+    it('should include iframe audio elements when requested', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      vi.mocked(findAudioElements).mockResolvedValue([
+        { element: mockAudioElement, selector: '#main-audio' },
+        { element: mockAudioElement, selector: 'iframe:nth-of-type(1) #iframe-audio' }
+      ]);
+
+      const params = {
+        includeIframes: true
+      };
+
+      const result = await audioTools.getAudioElements(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.total).toBe(2);
+    });
+  });
+
+  describe('controlAudioPlayback', () => {
+    it('should play audio element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        action: 'play' as const
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+      expect(result.data?.currentState).toBeDefined();
+      expect(result.data?.previousState).toBeDefined();
+    });
+
+    it('should pause audio element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        action: 'pause' as const
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should control volume', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        action: 'play' as const,
+        volume: 0.5
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should seek to specific time', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        action: 'play' as const,
+        seekTo: 30.5
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should validate action parameter', async () => {
+      const params = {
+        selector: '#audio-player',
+        action: 'invalid' as any
+      };
+
+      const result = await audioTools.controlAudioPlayback(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should validate selector points to audio element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock non-audio element
+      const divElement = {
+        ...mockAudioElement,
+        getTagName: vi.fn().mockResolvedValue('div')
+      };
+      vi.mocked(findElementWithRetry).mockResolvedValue(divElement as any);
+
+      const params = {
+        selector: '#not-audio',
+        action: 'play' as const
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('monitorAudioEvents', () => {
+    it('should monitor audio events for specified duration', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        duration: 1000,
+        events: ['play', 'pause', 'ended']
+      };
+
+      const result = await audioTools.monitorAudioEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+      expect(result.data?.summary).toBeDefined();
+      expect(result.data?.summary.playCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should monitor all audio elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        duration: 500
+      };
+
+      const result = await audioTools.monitorAudioEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+    });
+
+    it('should include time updates when requested', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#audio-player',
+        duration: 500,
+        includeTimeUpdates: true,
+        throttle: 100
+      };
+
+      const result = await audioTools.monitorAudioEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+    });
+
+    it('should validate duration parameter', async () => {
+      const params = {
+        duration: 50 // Too short
+      };
+
+      const result = await audioTools.monitorAudioEvents(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('analyzeAudioPerformance', () => {
+    it('should analyze audio performance metrics', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock performance monitoring
+      vi.mocked(require('../src/utils/audio.js').monitorAudioPerformance).mockResolvedValue({
+        samples: [
+          { timestamp: 1000, currentTime: 0, buffered: 5 },
+          { timestamp: 1100, currentTime: 0.1, buffered: 5.5 },
+          { timestamp: 1200, currentTime: 0.2, buffered: 6.0 }
+        ],
+        issues: []
+      });
+
+      const params = {
+        selector: '#audio-player',
+        duration: 2000,
+        metrics: ['bufferingTime', 'stutterEvents']
+      };
+
+      const result = await audioTools.analyzeAudioPerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.performance).toBeDefined();
+      expect(result.data?.timeline).toBeDefined();
+      expect(Array.isArray(result.data?.timeline)).toBe(true);
+    });
+
+    it('should validate selector parameter', async () => {
+      const params = {
+        selector: '',
+        duration: 1000
+      };
+
+      const result = await audioTools.analyzeAudioPerformance(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should validate duration parameter', async () => {
+      const params = {
+        selector: '#audio-player',
+        duration: 100 // Too short
+      };
+
+      const result = await audioTools.analyzeAudioPerformance(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('detectAudioIssues', () => {
+    it('should detect audio issues for specific element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock issue detection
+      vi.mocked(require('../src/utils/audio.js').detectAudioIssues).mockResolvedValue([
+        {
+          type: 'buffering',
+          severity: 'medium',
+          description: 'Audio buffering detected',
+          timestamp: Date.now(),
+          element: '#audio-player'
+        }
+      ]);
+
+      vi.mocked(require('../src/utils/audio.js').generateAudioRecommendations).mockReturnValue([
+        'Check network connectivity and server response times',
+        'Consider using audio preloading strategies'
+      ]);
+
+      const params = {
+        selector: '#audio-player',
+        checkDuration: 3000
+      };
+
+      const result = await audioTools.detectAudioIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(true);
+      expect(result.data?.issues).toHaveLength(1);
+      expect(result.data?.recommendations).toHaveLength(2);
+      expect(result.data?.issues[0].type).toBe('buffering');
+    });
+
+    it('should detect no issues for healthy audio', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock no issues
+      vi.mocked(require('../src/utils/audio.js').detectAudioIssues).mockResolvedValue([]);
+      vi.mocked(require('../src/utils/audio.js').generateAudioRecommendations).mockReturnValue([
+        'Audio playback appears to be functioning normally'
+      ]);
+
+      const params = {
+        selector: '#audio-player'
+      };
+
+      const result = await audioTools.detectAudioIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(false);
+      expect(result.data?.issues).toHaveLength(0);
+      expect(result.data?.recommendations).toContain('Audio playback appears to be functioning normally');
+    });
+
+    it('should scan all audio elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock multiple audio elements
+      vi.mocked(findAudioElements).mockResolvedValue([
+        { element: mockAudioElement, selector: '#audio1' },
+        { element: mockAudioElement, selector: '#audio2' }
+      ]);
+
+      vi.mocked(require('../src/utils/audio.js').detectAudioIssues).mockResolvedValue([]);
+
+      const params = {
+        checkDuration: 2000
+      };
+
+      const result = await audioTools.detectAudioIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(false);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle audio element not found', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+      vi.mocked(findElementWithRetry).mockRejectedValue(new Error('NoSuchElementError'));
+
+      const params = {
+        selector: '#non-existent-audio',
+        action: 'play' as const
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+    });
+
+    it('should handle invalid parameters gracefully', async () => {
+      const params = {
+        // Missing required parameters
+      };
+
+      const result = await audioTools.controlAudioPlayback(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should handle browser audio API errors', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+      mockDriver.executeScript.mockRejectedValue(new Error('Audio API not supported'));
+
+      const params = {
+        selector: '#audio-player',
+        action: 'play' as const
+      };
+
+      const result = await audioTools.controlAudioPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+    });
+  });
+});

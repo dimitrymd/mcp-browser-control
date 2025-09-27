@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Testing Page</title>
+    <style>
+        .audio-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>MCP Browser Control - Audio Testing Page</h1>
+
+    <div class="audio-container">
+        <h2>Audio Player 1 (MP3)</h2>
+        <audio id="audio1" controls preload="metadata">
+            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.ogg" type="audio/ogg">
+            Your browser does not support the audio element.
+        </audio>
+
+        <div class="controls">
+            <button onclick="playAudio('audio1')">Play</button>
+            <button onclick="pauseAudio('audio1')">Pause</button>
+            <button onclick="stopAudio('audio1')">Stop</button>
+            <button onclick="muteAudio('audio1')">Toggle Mute</button>
+        </div>
+
+        <div class="status" id="status1">Ready</div>
+    </div>
+
+    <div class="audio-container">
+        <h2>Audio Player 2 (WAV)</h2>
+        <audio id="audio2" controls loop>
+            <source src="https://www.soundjay.com/misc/sounds/clock-ticking-4.wav" type="audio/wav">
+            <source src="https://www.soundjay.com/misc/sounds/clock-ticking-4.ogg" type="audio/ogg">
+            Your browser does not support the audio element.
+        </audio>
+
+        <div class="controls">
+            <button onclick="playAudio('audio2')">Play</button>
+            <button onclick="pauseAudio('audio2')">Pause</button>
+            <button onclick="setVolume('audio2', 0.5)">50% Volume</button>
+            <button onclick="seekTo('audio2', 5)">Seek to 5s</button>
+        </div>
+
+        <div class="status" id="status2">Ready</div>
+    </div>
+
+    <div class="audio-container">
+        <h2>Video Player (MP4)</h2>
+        <video id="video1" controls width="400" height="300">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+
+        <div class="controls">
+            <button onclick="playAudio('video1')">Play</button>
+            <button onclick="pauseAudio('video1')">Pause</button>
+            <button onclick="fullscreen('video1')">Fullscreen</button>
+        </div>
+
+        <div class="status" id="status3">Ready</div>
+    </div>
+
+    <div class="audio-container">
+        <h2>Audio with No Source (Error Test)</h2>
+        <audio id="audio-no-source" controls>
+            <!-- No source elements -->
+        </audio>
+
+        <div class="controls">
+            <button onclick="playAudio('audio-no-source')">Play (Should Fail)</button>
+        </div>
+
+        <div class="status" id="status4">No Source</div>
+    </div>
+
+    <div class="audio-container">
+        <h2>Auto-play Audio (If Allowed)</h2>
+        <audio id="audio-autoplay" controls autoplay muted>
+            <source src="https://www.soundjay.com/misc/sounds/click-3.mp3" type="audio/mpeg">
+        </audio>
+
+        <div class="status" id="status5">Auto-play</div>
+    </div>
+
+    <script>
+        // Audio control functions
+        function playAudio(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.play().then(() => {
+                    updateStatus(elementId, 'Playing');
+                }).catch(err => {
+                    updateStatus(elementId, 'Error: ' + err.message);
+                });
+            }
+        }
+
+        function pauseAudio(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.pause();
+                updateStatus(elementId, 'Paused');
+            }
+        }
+
+        function stopAudio(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.pause();
+                element.currentTime = 0;
+                updateStatus(elementId, 'Stopped');
+            }
+        }
+
+        function muteAudio(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.muted = !element.muted;
+                updateStatus(elementId, element.muted ? 'Muted' : 'Unmuted');
+            }
+        }
+
+        function setVolume(elementId, volume) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.volume = volume;
+                updateStatus(elementId, `Volume: ${Math.round(volume * 100)}%`);
+            }
+        }
+
+        function seekTo(elementId, time) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.currentTime = time;
+                updateStatus(elementId, `Seek to: ${time}s`);
+            }
+        }
+
+        function fullscreen(elementId) {
+            const element = document.getElementById(elementId);
+            if (element && element.requestFullscreen) {
+                element.requestFullscreen();
+            }
+        }
+
+        function updateStatus(elementId, message) {
+            const statusMap = {
+                'audio1': 'status1',
+                'audio2': 'status2',
+                'video1': 'status3',
+                'audio-no-source': 'status4',
+                'audio-autoplay': 'status5'
+            };
+
+            const statusElement = document.getElementById(statusMap[elementId]);
+            if (statusElement) {
+                statusElement.textContent = message + ' - ' + new Date().toLocaleTimeString();
+            }
+        }
+
+        // Add event listeners for comprehensive testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioElements = document.querySelectorAll('audio, video');
+
+            audioElements.forEach((element, index) => {
+                // Add comprehensive event listeners for testing
+                const events = [
+                    'loadstart', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough',
+                    'play', 'pause', 'ended', 'timeupdate', 'volumechange', 'ratechange',
+                    'stalled', 'waiting', 'seeking', 'seeked', 'error'
+                ];
+
+                events.forEach(eventType => {
+                    element.addEventListener(eventType, function(event) {
+                        console.log(`Audio Event [${element.id || 'audio' + index}]: ${event.type}`, {
+                            currentTime: element.currentTime,
+                            duration: element.duration,
+                            paused: element.paused,
+                            volume: element.volume,
+                            muted: element.muted,
+                            readyState: element.readyState,
+                            networkState: element.networkState
+                        });
+                    });
+                });
+
+                // Special handling for error events
+                element.addEventListener('error', function(event) {
+                    console.error(`Audio Error [${element.id || 'audio' + index}]:`, {
+                        error: element.error,
+                        code: element.error ? element.error.code : 'unknown',
+                        message: element.error ? element.error.message : 'unknown error'
+                    });
+                    updateStatus(element.id, 'Error: ' + (element.error ? element.error.message : 'Unknown error'));
+                });
+            });
+
+            // Test autoplay policies
+            const autoplayAudio = document.getElementById('audio-autoplay');
+            if (autoplayAudio) {
+                setTimeout(() => {
+                    if (autoplayAudio.paused) {
+                        updateStatus('audio-autoplay', 'Autoplay blocked by browser policy');
+                    } else {
+                        updateStatus('audio-autoplay', 'Autoplay successful');
+                    }
+                }, 1000);
+            }
+        });
+
+        // Web Audio API testing utilities
+        window.createAudioContext = function() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const context = new AudioContext();
+
+                console.log('Audio context created:', {
+                    state: context.state,
+                    sampleRate: context.sampleRate,
+                    currentTime: context.currentTime
+                });
+
+                return context;
+            } catch (error) {
+                console.error('Failed to create audio context:', error);
+                return null;
+            }
+        };
+
+        // Audio analysis utilities for testing
+        window.analyzeAudioElement = function(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return null;
+
+            return {
+                id: elementId,
+                tagName: element.tagName,
+                src: element.src || element.currentSrc,
+                currentTime: element.currentTime,
+                duration: element.duration,
+                paused: element.paused,
+                ended: element.ended,
+                muted: element.muted,
+                volume: element.volume,
+                playbackRate: element.playbackRate,
+                readyState: element.readyState,
+                networkState: element.networkState,
+                buffered: element.buffered ? {
+                    length: element.buffered.length,
+                    ranges: Array.from({length: element.buffered.length}, (_, i) => ({
+                        start: element.buffered.start(i),
+                        end: element.buffered.end(i)
+                    }))
+                } : null,
+                hasSource: !!(element.src || element.currentSrc || element.querySelector('source')),
+                isPlaying: !element.paused && !element.ended && element.currentTime > 0
+            };
+        };
+
+        // Performance monitoring utilities
+        window.monitorAudioPerformance = function(elementId, duration = 5000) {
+            const element = document.getElementById(elementId);
+            if (!element) return Promise.resolve([]);
+
+            const samples = [];
+            const startTime = Date.now();
+
+            return new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    const now = Date.now();
+                    if (now - startTime >= duration) {
+                        clearInterval(interval);
+                        resolve(samples);
+                        return;
+                    }
+
+                    samples.push({
+                        timestamp: now,
+                        currentTime: element.currentTime,
+                        buffered: element.buffered && element.buffered.length > 0
+                            ? element.buffered.end(element.buffered.length - 1)
+                            : 0,
+                        paused: element.paused,
+                        volume: element.volume,
+                        readyState: element.readyState
+                    });
+                }, 100);
+            });
+        };
+    </script>
+</body>
+</html>

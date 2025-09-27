@@ -1,0 +1,914 @@
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
+import { WebDriver, WebElement } from 'selenium-webdriver';
+import winston from 'winston';
+
+import { VideoTools } from '../src/tools/video.js';
+import { SessionManager } from '../src/drivers/session.js';
+import { WebDriverManager } from '../src/drivers/manager.js';
+import { findVideoElements, extractVideoElementInfo, isVideoActuallyPlaying } from '../src/utils/video.js';
+
+// Mock the video utilities
+vi.mock('../src/utils/video.js', () => ({
+  findVideoElements: vi.fn(),
+  extractVideoElementInfo: vi.fn(),
+  isVideoActuallyPlaying: vi.fn(),
+  analyzeVideoQuality: vi.fn(),
+  testVideoAudioSync: vi.fn(),
+  detectVideoIssues: vi.fn(),
+  monitorVideoPerformance: vi.fn(),
+  generateVideoRecommendations: vi.fn(),
+  checkVideoFormatSupport: vi.fn(),
+  calculateVideoQualityScore: vi.fn(),
+  getVideoCodecInfo: vi.fn(),
+  testVideoAccessibility: vi.fn()
+}));
+
+// Mock the elements utility
+vi.mock('../src/utils/elements.js', () => ({
+  findElementWithRetry: vi.fn()
+}));
+
+// Mock logger
+const mockLogger = winston.createLogger({
+  level: 'error',
+  silent: true,
+  transports: [],
+});
+
+describe('Video Testing Tools - Revolutionary Media Platform', () => {
+  let videoTools: VideoTools;
+  let sessionManager: SessionManager;
+  let driverManager: WebDriverManager;
+  let mockDriver: any;
+  let mockVideoElement: any;
+
+  beforeAll(() => {
+    vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    // Reset all mocks
+    vi.clearAllMocks();
+
+    // Mock video element with comprehensive properties
+    mockVideoElement = {
+      getTagName: vi.fn().mockResolvedValue('video'),
+      getAttribute: vi.fn().mockImplementation((attr: string) => {
+        const attributes: Record<string, string> = {
+          'src': 'https://example.com/video.mp4',
+          'poster': 'https://example.com/poster.jpg',
+          'controls': 'true',
+          'autoplay': 'false',
+          'preload': 'metadata'
+        };
+        return Promise.resolve(attributes[attr] || null);
+      }),
+      click: vi.fn().mockResolvedValue(undefined)
+    };
+
+    // Mock driver with video-specific capabilities
+    mockDriver = {
+      findElement: vi.fn().mockResolvedValue(mockVideoElement),
+      findElements: vi.fn().mockResolvedValue([mockVideoElement]),
+      executeScript: vi.fn().mockImplementation((script: string) => {
+        // Mock different script executions based on content
+        if (script.includes('currentTime')) {
+          return Promise.resolve({
+            currentTime: 15.5,
+            duration: 180.0,
+            paused: false,
+            ended: false,
+            muted: false,
+            volume: 0.8,
+            playbackRate: 1.0,
+            videoWidth: 1920,
+            videoHeight: 1080,
+            readyState: 4,
+            networkState: 1,
+            webkitDecodedFrameCount: 450,
+            webkitDroppedFrameCount: 2
+          });
+        }
+        if (script.includes('frameRate')) {
+          return Promise.resolve({
+            isPlaying: true,
+            frameRate: 29.8,
+            frameAdvancement: true,
+            timeAdvancement: true
+          });
+        }
+        if (script.includes('Promise')) {
+          return Promise.resolve({
+            events: [],
+            summary: {
+              playCount: 1,
+              pauseCount: 0,
+              qualityChanges: 0,
+              bufferingEvents: 0,
+              fullscreenToggles: 0,
+              errors: []
+            }
+          });
+        }
+        if (script.includes('quality')) {
+          return Promise.resolve({
+            resolution: { width: 1920, height: 1080, aspectRatio: 16/9 },
+            frameRate: { declared: 30, actual: 29.8, variance: 0.2, droppedFrames: 2, corruptedFrames: 0 },
+            bitrate: { video: 8000000, audio: 128000, total: 8128000 },
+            codec: { video: 'h264', audio: 'aac', container: 'mp4' },
+            performance: { decodeTime: 5.2, renderTime: 2.1, bufferHealth: 8.5, cpuUsage: 15, gpuUsage: 25 }
+          });
+        }
+        return Promise.resolve(true);
+      }),
+      manage: vi.fn().mockReturnValue({
+        window: vi.fn().mockReturnValue({
+          getSize: vi.fn().mockResolvedValue({ width: 1920, height: 1080 })
+        })
+      })
+    };
+
+    // Mock driver manager
+    driverManager = {
+      createDriver: vi.fn().mockResolvedValue(mockDriver as WebDriver),
+      validateDriver: vi.fn().mockResolvedValue(true),
+      closeDriver: vi.fn().mockResolvedValue(undefined),
+      checkDriverHealth: vi.fn().mockResolvedValue({
+        isHealthy: true,
+        details: { canNavigate: true, canExecuteScript: true, responseTime: 100 }
+      })
+    } as any;
+
+    // Create session manager
+    sessionManager = new SessionManager(driverManager, mockLogger, 5, 600000);
+
+    // Create video tools
+    videoTools = new VideoTools(sessionManager, mockLogger);
+
+    // Setup mocks for utilities
+    const { findElementWithRetry } = require('../src/utils/elements.js');
+    vi.mocked(findElementWithRetry).mockResolvedValue(mockVideoElement as any);
+
+    vi.mocked(findVideoElements).mockResolvedValue([
+      {
+        element: mockVideoElement,
+        selector: '#video-player',
+        metadata: {
+          dimensions: { width: 1920, height: 1080, aspectRatio: 16/9 },
+          sources: [{ src: 'https://example.com/video.mp4', type: 'video/mp4' }],
+          tracks: []
+        }
+      }
+    ]);
+
+    vi.mocked(extractVideoElementInfo).mockResolvedValue({
+      selector: '#video-player',
+      tagName: 'video',
+      currentTime: 15.5,
+      duration: 180.0,
+      paused: false,
+      ended: false,
+      muted: false,
+      volume: 0.8,
+      playbackRate: 1.0,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      buffered: [{ start: 0, end: 20.0 }],
+      src: 'https://example.com/video.mp4',
+      currentSrc: 'https://example.com/video.mp4',
+      readyState: 4,
+      networkState: 1,
+      poster: 'https://example.com/poster.jpg',
+      preload: 'metadata',
+      autoplay: false,
+      loop: false,
+      controls: true,
+      crossOrigin: null,
+      playsinline: false,
+      webkitDecodedFrameCount: 450,
+      webkitDroppedFrameCount: 2,
+      webkitVideoDecodedByteCount: 5242880
+    });
+
+    vi.mocked(isVideoActuallyPlaying).mockResolvedValue({
+      isPlaying: true,
+      frameRate: 29.8,
+      frameAdvancement: true,
+      timeAdvancement: true
+    });
+  });
+
+  afterEach(async () => {
+    await sessionManager.shutdown();
+    vi.clearAllMocks();
+  });
+
+  describe('checkVideoPlaying - Revolutionary Detection', () => {
+    it('should detect real video playback for specific element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        checkInterval: 100,
+        sampleDuration: 1000,
+        frameRateThreshold: 24,
+        qualityCheck: true
+      };
+
+      const result = await videoTools.checkVideoPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.isPlaying).toBe(true);
+      expect(result.data?.elements).toHaveLength(1);
+      expect(result.data?.activeCount).toBe(1);
+      expect(result.data?.elements[0].selector).toBe('#video-player');
+      expect(result.data?.elements[0].tagName).toBe('video');
+      expect(result.data?.elements[0].videoWidth).toBe(1920);
+      expect(result.data?.elements[0].videoHeight).toBe(1080);
+    });
+
+    it('should scan all video elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        frameRateThreshold: 15,
+        qualityCheck: true
+      };
+
+      const result = await videoTools.checkVideoPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.elements).toHaveLength(1);
+      expect(result.data?.elements[0].tagName).toBe('video');
+    });
+
+    it('should detect quality issues during playback check', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock low frame rate
+      vi.mocked(isVideoActuallyPlaying).mockResolvedValue({
+        isPlaying: true,
+        frameRate: 12.5, // Below threshold
+        frameAdvancement: true,
+        timeAdvancement: true
+      });
+
+      const params = {
+        selector: '#video-player',
+        frameRateThreshold: 24,
+        qualityCheck: true
+      };
+
+      const result = await videoTools.checkVideoPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.qualityIssues).toBeDefined();
+      expect(result.data?.qualityIssues?.length).toBeGreaterThan(0);
+    });
+
+    it('should validate selector points to video element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock non-video element
+      const divElement = {
+        ...mockVideoElement,
+        getTagName: vi.fn().mockResolvedValue('div')
+      };
+      vi.mocked(require('../src/utils/elements.js').findElementWithRetry).mockResolvedValue(divElement as any);
+
+      const params = {
+        selector: '#not-video'
+      };
+
+      const result = await videoTools.checkVideoPlaying(params, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should handle video elements with no source', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      vi.mocked(extractVideoElementInfo).mockResolvedValue({
+        selector: '#video-no-source',
+        tagName: 'video',
+        currentTime: 0,
+        duration: 0,
+        paused: true,
+        ended: false,
+        muted: false,
+        volume: 1,
+        playbackRate: 1,
+        videoWidth: 0,
+        videoHeight: 0,
+        buffered: [],
+        src: '',
+        currentSrc: '',
+        readyState: 0,
+        networkState: 0,
+        poster: '',
+        preload: 'none',
+        autoplay: false,
+        loop: false,
+        controls: false,
+        crossOrigin: null,
+        playsinline: false
+      });
+
+      const params = {
+        selector: '#video-no-source'
+      };
+
+      const result = await videoTools.checkVideoPlaying(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.isPlaying).toBe(false);
+      expect(result.data?.activeCount).toBe(0);
+    });
+  });
+
+  describe('analyzeVideoQuality - Professional Analysis', () => {
+    it('should analyze video quality metrics', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const { analyzeVideoQuality, monitorVideoPerformance } = require('../src/utils/video.js');
+      vi.mocked(analyzeVideoQuality).mockResolvedValue({
+        resolution: { width: 1920, height: 1080, aspectRatio: 16/9 },
+        frameRate: { declared: 30, actual: 29.8, variance: 0.2, droppedFrames: 2, corruptedFrames: 0 },
+        bitrate: { video: 8000000, audio: 128000, total: 8128000 },
+        codec: { video: 'h264', audio: 'aac', container: 'mp4' },
+        performance: { decodeTime: 5.2, renderTime: 2.1, bufferHealth: 8.5, cpuUsage: 15, gpuUsage: 25 }
+      });
+
+      vi.mocked(monitorVideoPerformance).mockResolvedValue({
+        samples: [
+          { timestamp: 1000, currentTime: 0, frameCount: 0, droppedFrames: 0, bufferLevel: 5, qualityLevel: '1080p' },
+          { timestamp: 1200, currentTime: 0.2, frameCount: 6, droppedFrames: 0, bufferLevel: 5.2, qualityLevel: '1080p' }
+        ],
+        issues: [],
+        performance: {
+          playback: { frameRate: 29.8, droppedFrames: 2, corruptedFrames: 0, decodedFrames: 450, renderingFrames: 448 },
+          network: { bufferingTime: 0, downloadSpeed: 5000000, totalBytesDownloaded: 2621440, averageBitrate: 8000000 },
+          system: { cpuUsage: 15, gpuUsage: 25, memoryUsage: 134217728, decodeTime: 5.2, renderTime: 2.1 },
+          quality: { currentResolution: { width: 1920, height: 1080 }, availableQualities: ['1080p', '720p'], adaptationEvents: 0, qualityScore: 95 }
+        }
+      });
+
+      const params = {
+        selector: '#video-player',
+        duration: 3000,
+        includeFrameAnalysis: true,
+        includeBitrateAnalysis: true
+      };
+
+      const result = await videoTools.analyzeVideoQuality(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.quality).toBeDefined();
+      expect(result.data?.timeline).toBeDefined();
+      expect(result.data?.recommendations).toBeDefined();
+      expect(result.data?.quality.resolution.width).toBe(1920);
+      expect(result.data?.quality.resolution.height).toBe(1080);
+      expect(result.data?.quality.frameRate.actual).toBeCloseTo(29.8, 1);
+    });
+
+    it('should validate selector parameter', async () => {
+      const params = {
+        selector: '',
+        duration: 2000
+      };
+
+      const result = await videoTools.analyzeVideoQuality(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should validate duration parameter', async () => {
+      const params = {
+        selector: '#video-player',
+        duration: 500 // Too short
+      };
+
+      const result = await videoTools.analyzeVideoQuality(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('testVideoSync - Synchronization Testing', () => {
+    it('should test video/audio synchronization', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const { testVideoAudioSync } = require('../src/utils/video.js');
+      vi.mocked(testVideoAudioSync).mockResolvedValue({
+        inSync: true,
+        syncOffset: 0.05,
+        maxDrift: 0.08,
+        driftEvents: []
+      });
+
+      const params = {
+        videoSelector: '#video-player',
+        audioSelector: '#audio-track',
+        duration: 5000,
+        tolerance: 0.1
+      };
+
+      const result = await videoTools.testVideoSync(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.inSync).toBe(true);
+      expect(result.data?.syncOffset).toBeCloseTo(0.05, 2);
+      expect(result.data?.maxDrift).toBeCloseTo(0.08, 2);
+      expect(result.data?.recommendations).toBeDefined();
+    });
+
+    it('should detect sync issues', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const { testVideoAudioSync } = require('../src/utils/video.js');
+      vi.mocked(testVideoAudioSync).mockResolvedValue({
+        inSync: false,
+        syncOffset: 0.25,
+        maxDrift: 0.35,
+        driftEvents: [
+          { timestamp: 1000, offset: 0.25, severity: 'medium' },
+          { timestamp: 2000, offset: 0.35, severity: 'high' }
+        ]
+      });
+
+      const params = {
+        videoSelector: '#video-player',
+        duration: 3000,
+        tolerance: 0.1
+      };
+
+      const result = await videoTools.testVideoSync(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.inSync).toBe(false);
+      expect(result.data?.driftEvents).toHaveLength(2);
+      expect(result.data?.recommendations).toContain('Audio/video synchronization issues detected');
+    });
+
+    it('should validate required parameters', async () => {
+      const params = {
+        // Missing videoSelector
+        duration: 3000
+      };
+
+      const result = await videoTools.testVideoSync(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('controlVideoPlayback - Advanced Controls', () => {
+    it('should control video playback', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'play' as const,
+        volume: 0.8,
+        seekTo: 30.0
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+      expect(result.data?.currentState).toBeDefined();
+      expect(result.data?.previousState).toBeDefined();
+    });
+
+    it('should handle fullscreen control', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'fullscreen' as const
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should handle picture-in-picture control', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'pictureInPicture' as const
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should control video quality level', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'play' as const,
+        qualityLevel: '720p'
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should validate action parameter', async () => {
+      const params = {
+        selector: '#video-player',
+        action: 'invalid' as any
+      };
+
+      const result = await videoTools.controlVideoPlayback(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should validate selector points to video element', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock non-video element
+      const divElement = {
+        ...mockVideoElement,
+        getTagName: vi.fn().mockResolvedValue('div')
+      };
+      vi.mocked(require('../src/utils/elements.js').findElementWithRetry).mockResolvedValue(divElement as any);
+
+      const params = {
+        selector: '#not-video',
+        action: 'play' as const
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should handle fade effects', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'play' as const,
+        fadeIn: 2000
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+  });
+
+  describe('monitorVideoEvents - Event Monitoring', () => {
+    it('should monitor video events for specified duration', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        duration: 2000,
+        events: ['play', 'pause', 'ended', 'resize'],
+        includeQualityEvents: true,
+        includeFrameEvents: false
+      };
+
+      const result = await videoTools.monitorVideoEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+      expect(result.data?.summary).toBeDefined();
+      expect(result.data?.summary.playCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should monitor all video elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        duration: 1000,
+        includeQualityEvents: true
+      };
+
+      const result = await videoTools.monitorVideoEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+    });
+
+    it('should include frame events when requested', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        duration: 1000,
+        includeFrameEvents: true,
+        throttle: 100
+      };
+
+      const result = await videoTools.monitorVideoEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.events).toBeDefined();
+    });
+
+    it('should validate duration parameter', async () => {
+      const params = {
+        duration: 50 // Too short
+      };
+
+      const result = await videoTools.monitorVideoEvents(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+  });
+
+  describe('detectVideoIssues - Issue Detection', () => {
+    it('should detect video issues with quality scoring', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const { detectVideoIssues, generateVideoRecommendations } = require('../src/utils/video.js');
+      vi.mocked(detectVideoIssues).mockResolvedValue([
+        {
+          type: 'poor-quality',
+          severity: 'medium',
+          description: 'High frame drop rate detected',
+          timestamp: Date.now(),
+          element: '#video-player',
+          metrics: { droppedFrames: 15, frameRate: 25 }
+        }
+      ]);
+
+      vi.mocked(generateVideoRecommendations).mockReturnValue([
+        'Optimize video encoding settings and bitrate',
+        'Check system CPU/GPU usage during playback'
+      ]);
+
+      const params = {
+        selector: '#video-player',
+        checkDuration: 3000,
+        frameRateThreshold: 30,
+        qualityThreshold: 720
+      };
+
+      const result = await videoTools.detectVideoIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(true);
+      expect(result.data?.issues).toHaveLength(1);
+      expect(result.data?.recommendations).toHaveLength(2);
+      expect(result.data?.overallScore).toBeGreaterThan(0);
+      expect(result.data?.issues[0].type).toBe('poor-quality');
+    });
+
+    it('should detect excellent video quality', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const { detectVideoIssues, generateVideoRecommendations } = require('../src/utils/video.js');
+      vi.mocked(detectVideoIssues).mockResolvedValue([]);
+      vi.mocked(generateVideoRecommendations).mockReturnValue([
+        'Video playback appears to be functioning optimally'
+      ]);
+
+      const params = {
+        selector: '#video-player'
+      };
+
+      const result = await videoTools.detectVideoIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(false);
+      expect(result.data?.issues).toHaveLength(0);
+      expect(result.data?.overallScore).toBeGreaterThan(90);
+      expect(result.data?.recommendations).toContain('Video playback appears to be functioning optimally');
+    });
+
+    it('should scan all video elements when no selector provided', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock multiple video elements
+      vi.mocked(findVideoElements).mockResolvedValue([
+        { element: mockVideoElement, selector: '#video1', metadata: {} },
+        { element: mockVideoElement, selector: '#video2', metadata: {} }
+      ]);
+
+      const { detectVideoIssues } = require('../src/utils/video.js');
+      vi.mocked(detectVideoIssues).mockResolvedValue([]);
+
+      const params = {
+        checkDuration: 2000
+      };
+
+      const result = await videoTools.detectVideoIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.hasIssues).toBe(false);
+    });
+
+    it('should validate frame rate threshold', async () => {
+      const params = {
+        selector: '#video-player',
+        frameRateThreshold: -5 // Invalid
+      };
+
+      const result = await videoTools.detectVideoIssues(params);
+
+      expect(result.status).toBe('success'); // Validation happens in utility, not here
+    });
+  });
+
+  describe('Video Tool Integration', () => {
+    it('should handle missing sessionId gracefully', async () => {
+      const result = await videoTools.checkVideoPlaying({});
+
+      // Should get error due to no active sessions
+      expect(result.status).toBe('error');
+    });
+
+    it('should validate volume range in control_video_playback', async () => {
+      const result = await videoTools.controlVideoPlayback({
+        selector: '#video-player',
+        action: 'play',
+        volume: 1.5 // Invalid range
+      });
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004');
+    });
+
+    it('should validate playback rate range', async () => {
+      const result = await videoTools.controlVideoPlayback({
+        selector: '#video-player',
+        action: 'play',
+        playbackRate: 5.0 // Too high
+      });
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004');
+    });
+
+    it('should validate seek position', async () => {
+      const result = await videoTools.controlVideoPlayback({
+        selector: '#video-player',
+        action: 'play',
+        seekTo: -10 // Invalid negative
+      });
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle video element not found', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+      vi.mocked(require('../src/utils/elements.js').findElementWithRetry).mockRejectedValue(new Error('NoSuchElementError'));
+
+      const params = {
+        selector: '#non-existent-video',
+        action: 'play' as const
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+    });
+
+    it('should handle invalid parameters gracefully', async () => {
+      const params = {
+        // Missing required parameters
+      };
+
+      const result = await videoTools.controlVideoPlayback(params);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('E004'); // ValidationError
+    });
+
+    it('should handle browser video API errors', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+      mockDriver.executeScript.mockRejectedValue(new Error('Video API not supported'));
+
+      const params = {
+        selector: '#video-player',
+        action: 'play' as const
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('error');
+    });
+  });
+
+  describe('Advanced Video Features', () => {
+    it('should handle quality level changes', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#video-player',
+        action: 'play' as const,
+        qualityLevel: '720p'
+      };
+
+      const result = await videoTools.controlVideoPlayback(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.success).toBe(true);
+    });
+
+    it('should monitor quality adaptation events', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      const params = {
+        selector: '#adaptive-video',
+        duration: 2000,
+        includeQualityEvents: true
+      };
+
+      const result = await videoTools.monitorVideoEvents(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.summary.qualityChanges).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should test different video formats', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Test MP4
+      const mp4Result = await videoTools.checkVideoPlaying({
+        selector: '#mp4-video'
+      }, sessionId);
+
+      // Test WebM
+      const webmResult = await videoTools.checkVideoPlaying({
+        selector: '#webm-video'
+      }, sessionId);
+
+      expect(mp4Result.status).toBe('success');
+      expect(webmResult.status).toBe('success');
+    });
+
+    it('should handle different resolutions', async () => {
+      const sessionId = await sessionManager.createSession('chrome', { headless: true });
+
+      // Mock different resolutions
+      const resolutions = [
+        { width: 1920, height: 1080, name: '1080p' },
+        { width: 1280, height: 720, name: '720p' },
+        { width: 854, height: 480, name: '480p' }
+      ];
+
+      for (const res of resolutions) {
+        vi.mocked(extractVideoElementInfo).mockResolvedValue({
+          selector: `#video-${res.name}`,
+          tagName: 'video',
+          currentTime: 10,
+          duration: 60,
+          paused: false,
+          ended: false,
+          muted: false,
+          volume: 1,
+          playbackRate: 1,
+          videoWidth: res.width,
+          videoHeight: res.height,
+          buffered: [{ start: 0, end: 15 }],
+          src: `https://example.com/video-${res.name}.mp4`,
+          currentSrc: `https://example.com/video-${res.name}.mp4`,
+          readyState: 4,
+          networkState: 1,
+          poster: '',
+          preload: 'metadata',
+          autoplay: false,
+          loop: false,
+          controls: true,
+          crossOrigin: null,
+          playsinline: false
+        });
+
+        const result = await videoTools.checkVideoPlaying({
+          selector: `#video-${res.name}`
+        }, sessionId);
+
+        expect(result.status).toBe('success');
+        expect(result.data?.elements[0].videoWidth).toBe(res.width);
+        expect(result.data?.elements[0].videoHeight).toBe(res.height);
+      }
+    });
+  });
+});

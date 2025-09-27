@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog Testing Page</title>
+    <style>
+        .container {
+            margin: 20px;
+            padding: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MCP Browser Control - Dialog Testing Page</h1>
+
+        <div class="test-section">
+            <h2>Alert Dialogs</h2>
+            <button onclick="showAlert()">Show Alert</button>
+            <button onclick="showInfoAlert()">Show Info Alert</button>
+            <button onclick="showWarningAlert()">Show Warning</button>
+            <div class="result" id="alert-result">No alert shown yet</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Confirm Dialogs</h2>
+            <button onclick="showConfirm()">Show Confirm</button>
+            <button onclick="showDeleteConfirm()">Show Delete Confirm</button>
+            <div class="result" id="confirm-result">No confirm shown yet</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Prompt Dialogs</h2>
+            <button onclick="showPrompt()">Show Prompt</button>
+            <button onclick="showNamePrompt()">Show Name Prompt</button>
+            <button onclick="showNumberPrompt()">Show Number Prompt</button>
+            <div class="result" id="prompt-result">No prompt shown yet</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Delayed Dialogs</h2>
+            <button onclick="delayedAlert()">Delayed Alert (2s)</button>
+            <button onclick="multipleAlerts()">Multiple Alerts</button>
+            <div class="result" id="delayed-result">No delayed dialog shown yet</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Dialog Handler Testing</h2>
+            <button onclick="testAutoHandler()">Test Auto Handler</button>
+            <button onclick="testCallbackHandler()">Test Callback Handler</button>
+            <button onclick="disableHandler()">Disable Handler</button>
+            <div class="result" id="handler-result">Handler not set</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Storage Testing</h2>
+            <button onclick="setLocalStorage()">Set Local Storage</button>
+            <button onclick="getLocalStorage()">Get Local Storage</button>
+            <button onclick="clearLocalStorage()">Clear Local Storage</button>
+            <button onclick="setCookies()">Set Cookies</button>
+            <button onclick="getCookies()">Get Cookies</button>
+            <div class="result" id="storage-result">No storage operations yet</div>
+        </div>
+    </div>
+
+    <script>
+        // Alert functions
+        function showAlert() {
+            alert('This is a test alert message!');
+            document.getElementById('alert-result').textContent = 'Alert was shown';
+        }
+
+        function showInfoAlert() {
+            alert('Information: Operation completed successfully.');
+            document.getElementById('alert-result').textContent = 'Info alert was shown';
+        }
+
+        function showWarningAlert() {
+            alert('Warning: This action cannot be undone!');
+            document.getElementById('alert-result').textContent = 'Warning alert was shown';
+        }
+
+        // Confirm functions
+        function showConfirm() {
+            const result = confirm('Are you sure you want to continue?');
+            document.getElementById('confirm-result').textContent = 'Confirm result: ' + result;
+        }
+
+        function showDeleteConfirm() {
+            const result = confirm('Delete this item? This action cannot be undone.');
+            document.getElementById('confirm-result').textContent = 'Delete confirm result: ' + result;
+        }
+
+        // Prompt functions
+        function showPrompt() {
+            const result = prompt('Please enter your input:');
+            document.getElementById('prompt-result').textContent = 'Prompt result: ' + result;
+        }
+
+        function showNamePrompt() {
+            const result = prompt('What is your name?', 'Anonymous');
+            document.getElementById('prompt-result').textContent = 'Name: ' + result;
+        }
+
+        function showNumberPrompt() {
+            const result = prompt('Enter a number:', '0');
+            document.getElementById('prompt-result').textContent = 'Number: ' + result;
+        }
+
+        // Delayed dialog functions
+        function delayedAlert() {
+            document.getElementById('delayed-result').textContent = 'Alert will appear in 2 seconds...';
+            setTimeout(() => {
+                alert('This is a delayed alert!');
+                document.getElementById('delayed-result').textContent = 'Delayed alert was shown';
+            }, 2000);
+        }
+
+        function multipleAlerts() {
+            document.getElementById('delayed-result').textContent = 'Multiple alerts starting...';
+            setTimeout(() => alert('First alert'), 500);
+            setTimeout(() => alert('Second alert'), 1500);
+            setTimeout(() => {
+                alert('Third alert');
+                document.getElementById('delayed-result').textContent = 'All alerts completed';
+            }, 2500);
+        }
+
+        // Dialog handler testing
+        function testAutoHandler() {
+            // This will test if automatic handler is working
+            setTimeout(() => {
+                const result = confirm('Auto-handled confirm dialog');
+                document.getElementById('handler-result').textContent = 'Auto handler result: ' + result;
+            }, 100);
+        }
+
+        function testCallbackHandler() {
+            setTimeout(() => {
+                const result = prompt('Callback-handled prompt');
+                document.getElementById('handler-result').textContent = 'Callback handler result: ' + result;
+            }, 100);
+        }
+
+        function disableHandler() {
+            // This would disable the MCP dialog handler
+            if (window.MCPDialogHandler) {
+                window.alert = window.MCPDialogHandler.originalAlert;
+                window.confirm = window.MCPDialogHandler.originalConfirm;
+                window.prompt = window.MCPDialogHandler.originalPrompt;
+                delete window.MCPDialogHandler;
+                document.getElementById('handler-result').textContent = 'Handler disabled';
+            } else {
+                document.getElementById('handler-result').textContent = 'No handler to disable';
+            }
+        }
+
+        // Storage testing functions
+        function setLocalStorage() {
+            localStorage.setItem('test-key', 'test-value');
+            localStorage.setItem('user-pref', JSON.stringify({ theme: 'dark', lang: 'en' }));
+            sessionStorage.setItem('session-data', 'session-value');
+            document.getElementById('storage-result').textContent = 'Storage items set';
+        }
+
+        function getLocalStorage() {
+            const testKey = localStorage.getItem('test-key');
+            const userPref = localStorage.getItem('user-pref');
+            const sessionData = sessionStorage.getItem('session-data');
+
+            document.getElementById('storage-result').textContent =
+                `Local: ${testKey}, User: ${userPref}, Session: ${sessionData}`;
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('storage-result').textContent = 'Storage cleared';
+        }
+
+        function setCookies() {
+            document.cookie = 'test-cookie=test-value; path=/';
+            document.cookie = 'user-id=12345; path=/; max-age=3600';
+            document.cookie = 'session-token=abc123; path=/; secure; samesite=strict';
+            document.getElementById('storage-result').textContent = 'Cookies set';
+        }
+
+        function getCookies() {
+            const cookies = document.cookie;
+            document.getElementById('storage-result').textContent = 'Cookies: ' + cookies;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dialog testing page loaded');
+
+            // Test initial state
+            const audioElements = document.querySelectorAll('audio, video');
+            console.log(`Found ${audioElements.length} audio/video elements`);
+
+            // Test storage availability
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                console.log('localStorage is available');
+            } catch (e) {
+                console.warn('localStorage not available:', e);
+            }
+
+            try {
+                sessionStorage.setItem('test', 'test');
+                sessionStorage.removeItem('test');
+                console.log('sessionStorage is available');
+            } catch (e) {
+                console.warn('sessionStorage not available:', e);
+            }
+        });
+
+        // Global error handler for testing
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+    </script>
+</body>
+</html>
