@@ -3,22 +3,29 @@
 /**
  * Revolutionary Video Testing Workflow Example
  * Demonstrates the world's first comprehensive video testing automation
+ *
+ * NOTE: This is a conceptual example showing MCP tool usage patterns.
+ * To actually run this workflow, you need to:
+ * 1. Connect to the MCP server using an MCP client (e.g., Claude Desktop)
+ * 2. Use the MCP protocol to call these tools
+ * 3. See the GUIDE.md for proper setup instructions
  */
 
-import { MCPBrowserControlClient } from '../client/mcp-client.js';
-
 class VideoTestingWorkflow {
-  constructor(serverURL = 'http://localhost:3000') {
-    this.client = new MCPBrowserControlClient(serverURL);
+  constructor() {
+    console.log('Video Testing Workflow initialized');
   }
 
   async runCompleteVideoTest() {
     console.log('🎬 Starting Revolutionary Video Testing Workflow...\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
       // 1. Create browser session optimized for video
       console.log('📱 Creating video-optimized browser session...');
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: false, // Visual mode for video demonstration
         windowSize: { width: 1920, height: 1080 }
@@ -29,7 +36,7 @@ class VideoTestingWorkflow {
 
       // 2. Navigate to video test page
       console.log('🌐 Navigating to video test page...');
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'file:///Users/dimitrymd/Documents/prj/MCPBroControl/test-fixtures/pages/video-test.html',
         sessionId
       });
@@ -37,7 +44,7 @@ class VideoTestingWorkflow {
 
       // 3. Discover all video elements
       console.log('🔍 Discovering video elements...');
-      const videoElements = await this.client.executeTool('execute_javascript', {
+      const videoElements = await mcpClient.callTool('execute_javascript', {
         script: `
           const videos = document.querySelectorAll('video');
           return Array.from(videos).map((video, index) => ({
@@ -69,7 +76,7 @@ class VideoTestingWorkflow {
       console.log('🎯 Testing revolutionary video playback detection...');
 
       // Check initial state (should be paused)
-      const initialState = await this.client.executeTool('check_video_playing', {
+      const initialState = await mcpClient.callTool('check_video_playing', {
         selector: '#main-video',
         checkInterval: 100,
         sampleDuration: 1500,
@@ -96,7 +103,7 @@ class VideoTestingWorkflow {
 
       // 5. Start video playback with professional controls
       console.log('\n▶️  Starting video playback with fade in...');
-      await this.client.executeTool('control_video_playback', {
+      await mcpClient.callTool('control_video_playback', {
         selector: '#main-video',
         action: 'play',
         volume: 0.8,
@@ -109,7 +116,7 @@ class VideoTestingWorkflow {
 
       // 6. Monitor revolutionary video playback detection
       console.log('🔍 Monitoring real video playback with frame advancement...');
-      const playingState = await this.client.executeTool('check_video_playing', {
+      const playingState = await mcpClient.callTool('check_video_playing', {
         selector: '#main-video',
         checkInterval: 100,
         sampleDuration: 2000, // 2-second sampling for frame advancement
@@ -134,7 +141,7 @@ class VideoTestingWorkflow {
 
       // 7. Analyze video quality with professional metrics
       console.log('\n📈 Analyzing video quality with professional metrics...');
-      const qualityResult = await this.client.executeTool('analyze_video_quality', {
+      const qualityResult = await mcpClient.callTool('analyze_video_quality', {
         selector: '#main-video',
         duration: 4000,
         includeFrameAnalysis: true,
@@ -158,7 +165,7 @@ class VideoTestingWorkflow {
 
       // 8. Monitor video events in real-time
       console.log('\n📡 Starting real-time video event monitoring...');
-      const eventsPromise = this.client.executeTool('monitor_video_events', {
+      const eventsPromise = mcpClient.callTool('monitor_video_events', {
         selector: '#main-video',
         duration: 6000,
         events: ['play', 'pause', 'seeking', 'seeked', 'timeupdate', 'resize', 'stalled', 'waiting'],
@@ -173,7 +180,7 @@ class VideoTestingWorkflow {
         console.log('🎛️  Testing advanced video controls...');
 
         // Test quality level control
-        await this.client.executeTool('control_video_playback', {
+        await mcpClient.callTool('control_video_playback', {
           selector: '#main-video',
           action: 'play',
           qualityLevel: '720p',
@@ -182,7 +189,7 @@ class VideoTestingWorkflow {
 
         // Test seeking
         setTimeout(async () => {
-          await this.client.executeTool('control_video_playback', {
+          await mcpClient.callTool('control_video_playback', {
             selector: '#main-video',
             action: 'play',
             seekTo: 20.0,
@@ -192,7 +199,7 @@ class VideoTestingWorkflow {
 
         // Test playback rate
         setTimeout(async () => {
-          await this.client.executeTool('control_video_playback', {
+          await mcpClient.callTool('control_video_playback', {
             selector: '#main-video',
             action: 'play',
             playbackRate: 1.5,
@@ -202,7 +209,7 @@ class VideoTestingWorkflow {
 
         // Test fullscreen
         setTimeout(async () => {
-          await this.client.executeTool('control_video_playback', {
+          await mcpClient.callTool('control_video_playback', {
             selector: '#main-video',
             action: 'fullscreen',
             sessionId
@@ -210,7 +217,7 @@ class VideoTestingWorkflow {
 
           // Exit fullscreen after 2 seconds
           setTimeout(async () => {
-            await this.client.executeTool('control_video_playback', {
+            await mcpClient.callTool('control_video_playback', {
               selector: '#main-video',
               action: 'exitFullscreen',
               sessionId
@@ -232,7 +239,7 @@ class VideoTestingWorkflow {
 
       // 10. Test video/audio synchronization
       console.log('\n🔄 Testing video/audio synchronization...');
-      const syncResult = await this.client.executeTool('test_video_sync', {
+      const syncResult = await mcpClient.callTool('test_video_sync', {
         videoSelector: '#sync-video',
         audioSelector: '#sync-audio',
         duration: 5000,
@@ -260,7 +267,7 @@ class VideoTestingWorkflow {
 
       // 11. Comprehensive video issue detection
       console.log('\n🔍 Detecting video issues with quality scoring...');
-      const issuesResult = await this.client.executeTool('detect_video_issues', {
+      const issuesResult = await mcpClient.callTool('detect_video_issues', {
         checkDuration: 3000,
         frameRateThreshold: 25,
         qualityThreshold: 720,
@@ -293,7 +300,7 @@ class VideoTestingWorkflow {
       const videoSelectors = ['#main-video', '#secondary-video', '#autoplay-video'];
       for (const selector of videoSelectors) {
         try {
-          const formatResult = await this.client.executeTool('check_video_playing', {
+          const formatResult = await mcpClient.callTool('check_video_playing', {
             selector,
             qualityCheck: true,
             sessionId
@@ -316,7 +323,7 @@ class VideoTestingWorkflow {
       console.log('\n🎛️  Testing comprehensive video controls...');
 
       // Test volume control
-      await this.client.executeTool('control_video_playback', {
+      await mcpClient.callTool('control_video_playback', {
         selector: '#main-video',
         action: 'play',
         volume: 0.6,
@@ -325,7 +332,7 @@ class VideoTestingWorkflow {
       console.log('   ✅ Volume control tested');
 
       // Test seeking precision
-      await this.client.executeTool('control_video_playback', {
+      await mcpClient.callTool('control_video_playback', {
         selector: '#main-video',
         action: 'play',
         seekTo: 45.5,
@@ -334,7 +341,7 @@ class VideoTestingWorkflow {
       console.log('   ✅ Precise seeking tested');
 
       // Test playback rate control
-      await this.client.executeTool('control_video_playback', {
+      await mcpClient.callTool('control_video_playback', {
         selector: '#main-video',
         action: 'play',
         playbackRate: 2.0,
@@ -344,7 +351,7 @@ class VideoTestingWorkflow {
 
       // Test picture-in-picture
       try {
-        await this.client.executeTool('control_video_playback', {
+        await mcpClient.callTool('control_video_playback', {
           selector: '#main-video',
           action: 'pictureInPicture',
           sessionId
@@ -353,7 +360,7 @@ class VideoTestingWorkflow {
 
         // Exit PiP after 2 seconds
         setTimeout(async () => {
-          await this.client.executeTool('execute_javascript', {
+          await mcpClient.callTool('execute_javascript', {
             script: 'if (document.pictureInPictureElement) { document.exitPictureInPicture(); }',
             sessionId
           });
@@ -372,7 +379,7 @@ class VideoTestingWorkflow {
 
       for (const test of errorTests) {
         try {
-          const errorResult = await this.client.executeTool('detect_video_issues', {
+          const errorResult = await mcpClient.callTool('detect_video_issues', {
             selector: test.selector,
             checkDuration: 2000,
             sessionId
@@ -396,7 +403,7 @@ class VideoTestingWorkflow {
       console.log('\n📸 Capturing video testing documentation...');
 
       // Screenshot of main video player
-      await this.client.executeTool('take_screenshot', {
+      await mcpClient.callTool('take_screenshot', {
         selector: '#main-video',
         format: 'png',
         sessionId
@@ -404,7 +411,7 @@ class VideoTestingWorkflow {
       console.log('   📸 Main video player captured');
 
       // Full page screenshot
-      await this.client.executeTool('take_screenshot', {
+      await mcpClient.callTool('take_screenshot', {
         fullPage: true,
         format: 'png',
         sessionId
@@ -413,7 +420,7 @@ class VideoTestingWorkflow {
 
       // 16. Final video state analysis
       console.log('\n📊 Final video state analysis...');
-      const finalAnalysis = await this.client.executeTool('execute_javascript', {
+      const finalAnalysis = await mcpClient.callTool('execute_javascript', {
         script: `
           const videos = document.querySelectorAll('video');
           const analysis = {
@@ -466,7 +473,7 @@ class VideoTestingWorkflow {
 
       // 17. Stop all video playback
       console.log('\n⏹️  Stopping all video playback...');
-      await this.client.executeTool('execute_javascript', {
+      await mcpClient.callTool('execute_javascript', {
         script: `
           const videos = document.querySelectorAll('video');
           videos.forEach(video => {
@@ -480,7 +487,7 @@ class VideoTestingWorkflow {
       });
 
       // Cleanup
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
       console.log('\n🎉 Revolutionary Video Testing Workflow Completed Successfully!');
       console.log('🎬 This demonstrates world-class video testing capabilities:');
@@ -502,15 +509,18 @@ class VideoTestingWorkflow {
   async runQuickVideoTest() {
     console.log('⚡ Quick Video Test - Revolutionary Playback Detection\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: true
       });
       const sessionId = sessionResult.data.sessionId;
 
       // Navigate to a video URL
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
         sessionId
       });
@@ -519,7 +529,7 @@ class VideoTestingWorkflow {
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Revolutionary video playback detection
-      const playbackResult = await this.client.executeTool('check_video_playing', {
+      const playbackResult = await mcpClient.callTool('check_video_playing', {
         checkInterval: 50,
         sampleDuration: 2000,
         frameRateThreshold: 20,
@@ -549,7 +559,7 @@ class VideoTestingWorkflow {
         });
       }
 
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
       console.log('\n✅ Quick video test completed!');
 

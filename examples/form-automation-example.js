@@ -3,21 +3,28 @@
 /**
  * Form Automation Example
  * Demonstrates comprehensive form interaction and data extraction
+ *
+ * NOTE: This is a conceptual example showing MCP tool usage patterns.
+ * To actually run this workflow, you need to:
+ * 1. Connect to the MCP server using an MCP client (e.g., Claude Desktop)
+ * 2. Use the MCP protocol to call these tools
+ * 3. See the GUIDE.md for proper setup instructions
  */
 
-import { MCPBrowserControlClient } from '../client/mcp-client.js';
-
 class FormAutomationExample {
-  constructor(serverURL = 'http://localhost:3000') {
-    this.client = new MCPBrowserControlClient(serverURL);
+  constructor() {
+    console.log('Form Automation Example initialized');
   }
 
   async runFormAutomation() {
     console.log('📝 Form Automation Example - Complete Workflow\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
       // 1. Create session
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: false, // Visual mode for demonstration
         windowSize: { width: 1400, height: 900 }
@@ -27,14 +34,14 @@ class FormAutomationExample {
 
       // 2. Navigate to form test page
       console.log('\n🌐 Navigating to form test page...');
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'file:///Users/dimitrymd/Documents/prj/MCPBroControl/test-fixtures/pages/dialog-test.html',
         sessionId
       });
 
       // 3. Extract form structure before filling
       console.log('\n🔍 Analyzing form structure...');
-      const formData = await this.client.executeTool('extract_form_data', {
+      const formData = await mcpClient.callTool('extract_form_data', {
         includeHidden: false,
         includeDisabled: false,
         groupByName: true,
@@ -54,7 +61,7 @@ class FormAutomationExample {
       console.log('\n✍️  Filling out form fields...');
 
       // Text input
-      await this.client.executeTool('type_text', {
+      await mcpClient.callTool('type_text', {
         selector: '#email-input',
         text: 'test@example.com',
         clear: true,
@@ -63,7 +70,7 @@ class FormAutomationExample {
       console.log('   ✅ Email field filled');
 
       // Password input
-      await this.client.executeTool('type_text', {
+      await mcpClient.callTool('type_text', {
         selector: '#password-input',
         text: 'SecurePassword123!',
         clear: true,
@@ -72,7 +79,7 @@ class FormAutomationExample {
       console.log('   ✅ Password field filled');
 
       // Dropdown selection
-      await this.client.executeTool('select_dropdown', {
+      await mcpClient.callTool('select_dropdown', {
         selector: '#country-select',
         text: 'United States',
         sessionId
@@ -80,7 +87,7 @@ class FormAutomationExample {
       console.log('   ✅ Country selected');
 
       // Checkbox interaction
-      await this.client.executeTool('click', {
+      await mcpClient.callTool('click', {
         selector: '#terms-checkbox',
         clickType: 'left',
         sessionId
@@ -88,7 +95,7 @@ class FormAutomationExample {
       console.log('   ✅ Terms checkbox checked');
 
       // Radio button selection
-      await this.client.executeTool('click', {
+      await mcpClient.callTool('click', {
         selector: '#subscription-premium',
         clickType: 'left',
         sessionId
@@ -97,7 +104,7 @@ class FormAutomationExample {
 
       // 5. Validate form completion
       console.log('\n✔️  Validating form completion...');
-      const completedFormData = await this.client.executeTool('extract_form_data', {
+      const completedFormData = await mcpClient.callTool('extract_form_data', {
         includeHidden: false,
         includeDisabled: false,
         sessionId
@@ -113,7 +120,7 @@ class FormAutomationExample {
 
       // 6. Take screenshot before submission
       console.log('\n📸 Capturing form state screenshot...');
-      await this.client.executeTool('take_screenshot', {
+      await mcpClient.callTool('take_screenshot', {
         selector: '#contact-form',
         format: 'png',
         sessionId
@@ -123,7 +130,7 @@ class FormAutomationExample {
       console.log('\n🚀 Submitting form with network monitoring...');
 
       // Start network capture
-      const captureResult = await this.client.executeTool('start_network_capture', {
+      const captureResult = await mcpClient.callTool('start_network_capture', {
         captureTypes: ['xhr', 'fetch'],
         includeHeaders: true,
         includeBody: true,
@@ -132,7 +139,7 @@ class FormAutomationExample {
       const captureId = captureResult.data.captureId;
 
       // Submit form
-      await this.client.executeTool('click', {
+      await mcpClient.callTool('click', {
         selector: '#submit-button',
         clickType: 'left',
         waitForElement: true,
@@ -143,7 +150,7 @@ class FormAutomationExample {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Get network data
-      const networkData = await this.client.executeTool('get_network_data', {
+      const networkData = await mcpClient.callTool('get_network_data', {
         captureId,
         sessionId
       });
@@ -154,7 +161,7 @@ class FormAutomationExample {
       });
 
       // Stop network capture
-      await this.client.executeTool('stop_network_capture', {
+      await mcpClient.callTool('stop_network_capture', {
         captureId,
         getData: false,
         sessionId
@@ -163,7 +170,7 @@ class FormAutomationExample {
       // 8. Wait for and handle any dialogs
       console.log('\n💬 Checking for confirmation dialogs...');
       try {
-        const alertResult = await this.client.executeTool('handle_alert', {
+        const alertResult = await mcpClient.callTool('handle_alert', {
           action: 'accept',
           timeout: 3000,
           sessionId
@@ -176,14 +183,14 @@ class FormAutomationExample {
 
       // 9. Verify submission success
       console.log('\n🔍 Verifying form submission...');
-      await this.client.executeTool('wait_for_text', {
+      await mcpClient.callTool('wait_for_text', {
         text: 'success',
         exact: false,
         timeout: 5000,
         sessionId
       });
 
-      const pageContent = await this.client.executeTool('get_page_content', {
+      const pageContent = await mcpClient.callTool('get_page_content', {
         format: 'text',
         selector: '#result-message',
         sessionId
@@ -193,14 +200,14 @@ class FormAutomationExample {
 
       // 10. Take final screenshot
       console.log('\n📸 Capturing final state...');
-      await this.client.executeTool('take_screenshot', {
+      await mcpClient.callTool('take_screenshot', {
         fullPage: true,
         format: 'png',
         sessionId
       });
 
       // Cleanup
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
       console.log('\n🎉 Form automation workflow completed successfully!');
       console.log('💼 This demonstrates:');
@@ -219,21 +226,24 @@ class FormAutomationExample {
   async runQuickFormTest() {
     console.log('⚡ Quick Form Test - Basic Interaction\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: true
       });
       const sessionId = sessionResult.data.sessionId;
 
       // Navigate to simple form
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'https://httpbin.org/forms/post',
         sessionId
       });
 
       // Extract form structure
-      const formStructure = await this.client.executeTool('extract_form_data', {
+      const formStructure = await mcpClient.callTool('extract_form_data', {
         sessionId
       });
 
@@ -243,7 +253,7 @@ class FormAutomationExample {
       if (formStructure.data.fields.length > 0) {
         const firstField = formStructure.data.fields[0];
         if (firstField.type === 'text' || firstField.type === 'email') {
-          await this.client.executeTool('type_text', {
+          await mcpClient.callTool('type_text', {
             selector: `[name="${firstField.name}"]`,
             text: 'test-value',
             sessionId
@@ -252,7 +262,7 @@ class FormAutomationExample {
         }
       }
 
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
       console.log('✅ Quick form test completed!');
 
     } catch (error) {

@@ -3,22 +3,34 @@
 /**
  * Complete Audio Testing Workflow Example
  * Demonstrates the revolutionary audio testing capabilities
+ *
+ * NOTE: This is a conceptual example showing MCP tool usage patterns.
+ * To actually run this workflow, you need to:
+ * 1. Connect to the MCP server using an MCP client (e.g., Claude Desktop)
+ * 2. Use the MCP protocol to call these tools
+ * 3. See the GUIDE.md for proper setup instructions
  */
 
-import { MCPBrowserControlClient } from '../client/mcp-client.js';
-
+// This is a conceptual class showing how the workflow would be structured
+// In reality, you would call these tools through MCP protocol messages
 class AudioTestingWorkflow {
-  constructor(serverURL = 'http://localhost:3000') {
-    this.client = new MCPBrowserControlClient(serverURL);
+  constructor() {
+    // No direct client needed - tools are called via MCP protocol
+    console.log('Audio Testing Workflow initialized');
   }
 
   async runCompleteAudioTest() {
     console.log('🎵 Starting Complete Audio Testing Workflow...\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    // In practice, this would be your configured MCP client instance
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
       // 1. Create browser session
       console.log('📱 Creating browser session...');
-      const sessionResult = await this.client.executeTool('create_session', {
+      // MCP Tool Call: create_session
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: false, // Visual mode for demonstration
         windowSize: { width: 1920, height: 1080 }
@@ -29,7 +41,7 @@ class AudioTestingWorkflow {
 
       // 2. Navigate to audio test page
       console.log('🌐 Navigating to audio test page...');
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'file:///Users/dimitrymd/Documents/prj/MCPBroControl/test-fixtures/pages/audio-test.html',
         sessionId
       });
@@ -37,7 +49,7 @@ class AudioTestingWorkflow {
 
       // 3. Discover all audio elements
       console.log('🔍 Discovering audio elements...');
-      const elementsResult = await this.client.executeTool('get_audio_elements', {
+      const elementsResult = await mcpClient.callTool('get_audio_elements', {
         includeIframes: true,
         onlyWithSource: true,
         sessionId
@@ -56,7 +68,7 @@ class AudioTestingWorkflow {
       console.log('🎯 Testing real audio playback detection...');
 
       // Check initial state (should be paused)
-      const initialState = await this.client.executeTool('check_audio_playing', {
+      const initialState = await mcpClient.callTool('check_audio_playing', {
         selector: '#audio1',
         checkInterval: 100,
         sampleDuration: 1000,
@@ -69,7 +81,7 @@ class AudioTestingWorkflow {
 
       // 5. Start audio playback with professional controls
       console.log('\n▶️  Starting audio playback with fade in...');
-      await this.client.executeTool('control_audio_playback', {
+      await mcpClient.callTool('control_audio_playback', {
         selector: '#audio1',
         action: 'play',
         volume: 0.8,
@@ -82,7 +94,7 @@ class AudioTestingWorkflow {
 
       // 6. Monitor real playback detection
       console.log('🔍 Monitoring real audio playback...');
-      const playingState = await this.client.executeTool('check_audio_playing', {
+      const playingState = await mcpClient.callTool('check_audio_playing', {
         selector: '#audio1',
         checkInterval: 100,
         sampleDuration: 2000, // 2-second sampling
@@ -97,7 +109,7 @@ class AudioTestingWorkflow {
 
       // 7. Monitor audio events in real-time
       console.log('\n📡 Starting real-time audio event monitoring...');
-      const eventsPromise = this.client.executeTool('monitor_audio_events', {
+      const eventsPromise = mcpClient.callTool('monitor_audio_events', {
         selector: '#audio1',
         duration: 5000,
         events: ['play', 'pause', 'timeupdate', 'ended', 'stalled', 'waiting'],
@@ -111,7 +123,7 @@ class AudioTestingWorkflow {
         console.log('🎛️  Testing advanced audio controls...');
 
         // Test volume control
-        await this.client.executeTool('control_audio_playback', {
+        await mcpClient.callTool('control_audio_playback', {
           selector: '#audio1',
           action: 'play',
           volume: 0.5,
@@ -120,7 +132,7 @@ class AudioTestingWorkflow {
 
         // Test seeking
         setTimeout(async () => {
-          await this.client.executeTool('control_audio_playback', {
+          await mcpClient.callTool('control_audio_playback', {
             selector: '#audio1',
             action: 'play',
             seekTo: 10.0,
@@ -130,7 +142,7 @@ class AudioTestingWorkflow {
 
         // Test playback rate
         setTimeout(async () => {
-          await this.client.executeTool('control_audio_playback', {
+          await mcpClient.callTool('control_audio_playback', {
             selector: '#audio1',
             action: 'play',
             playbackRate: 1.5,
@@ -151,7 +163,7 @@ class AudioTestingWorkflow {
 
       // 9. Analyze audio performance
       console.log('\n⚡ Analyzing audio performance...');
-      const performanceResult = await this.client.executeTool('analyze_audio_performance', {
+      const performanceResult = await mcpClient.callTool('analyze_audio_performance', {
         selector: '#audio1',
         duration: 3000,
         metrics: ['bufferingTime', 'stutterEvents', 'bufferRatio'],
@@ -166,7 +178,7 @@ class AudioTestingWorkflow {
 
       // 10. Detect audio issues
       console.log('\n🔍 Detecting audio issues...');
-      const issuesResult = await this.client.executeTool('detect_audio_issues', {
+      const issuesResult = await mcpClient.callTool('detect_audio_issues', {
         selector: '#audio1',
         checkDuration: 2000,
         sessionId
@@ -184,7 +196,7 @@ class AudioTestingWorkflow {
 
       // 11. Test fade out and stop
       console.log('\n⏹️  Stopping audio with fade out...');
-      await this.client.executeTool('control_audio_playback', {
+      await mcpClient.callTool('control_audio_playback', {
         selector: '#audio1',
         action: 'pause',
         fadeOut: 1500, // 1.5-second fade out
@@ -193,7 +205,7 @@ class AudioTestingWorkflow {
 
       // 12. Final state check
       setTimeout(async () => {
-        const finalState = await this.client.executeTool('check_audio_playing', {
+        const finalState = await mcpClient.callTool('check_audio_playing', {
           selector: '#audio1',
           sampleDuration: 1000,
           sessionId
@@ -203,7 +215,7 @@ class AudioTestingWorkflow {
         console.log(`   Final time: ${finalState.data.elements[0].currentTime}s`);
 
         // 13. Take screenshot for documentation
-        await this.client.executeTool('take_screenshot', {
+        await mcpClient.callTool('take_screenshot', {
           fullPage: true,
           format: 'png',
           sessionId
@@ -213,7 +225,7 @@ class AudioTestingWorkflow {
         console.log('📸 Screenshot captured for documentation');
 
         // Cleanup
-        await this.client.executeTool('close_session', { sessionId });
+        await mcpClient.callTool('close_session', { sessionId });
         console.log('🧹 Session cleaned up');
 
       }, 2000);
@@ -227,15 +239,18 @@ class AudioTestingWorkflow {
   async runQuickAudioTest() {
     console.log('⚡ Quick Audio Test - Real Playback Detection\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: true
       });
       const sessionId = sessionResult.data.sessionId;
 
       // Navigate to test page
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3',
         sessionId
       });
@@ -244,7 +259,7 @@ class AudioTestingWorkflow {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Check if audio is actually playing (revolutionary detection)
-      const playbackResult = await this.client.executeTool('check_audio_playing', {
+      const playbackResult = await mcpClient.callTool('check_audio_playing', {
         checkInterval: 50,
         sampleDuration: 1500,
         sessionId
@@ -264,7 +279,7 @@ class AudioTestingWorkflow {
         console.log(`   Ready State: ${element.readyState}`);
       }
 
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
       console.log('\n✅ Quick audio test completed!');
 

@@ -3,21 +3,28 @@
 /**
  * Multi-Window Testing Example
  * Demonstrates advanced window management and coordination
+ *
+ * NOTE: This is a conceptual example showing MCP tool usage patterns.
+ * To actually run this workflow, you need to:
+ * 1. Connect to the MCP server using an MCP client (e.g., Claude Desktop)
+ * 2. Use the MCP protocol to call these tools
+ * 3. See the GUIDE.md for proper setup instructions
  */
 
-import { MCPBrowserControlClient } from '../client/mcp-client.js';
-
 class MultiWindowTestingExample {
-  constructor(serverURL = 'http://localhost:3000') {
-    this.client = new MCPBrowserControlClient(serverURL);
+  constructor() {
+    console.log('Multi-Window Testing Example initialized');
   }
 
   async runMultiWindowWorkflow() {
     console.log('🪟 Multi-Window Testing Workflow - Enterprise Features\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
       // 1. Create main session
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: false, // Visual mode for demonstration
         windowSize: { width: 1200, height: 800 }
@@ -27,13 +34,13 @@ class MultiWindowTestingExample {
 
       // 2. Navigate to starting page
       console.log('\n🌐 Navigating to starting page...');
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'https://google.com',
         sessionId
       });
 
       // 3. Get initial window information
-      const initialWindows = await this.client.executeTool('get_windows', { sessionId });
+      const initialWindows = await mcpClient.callTool('get_windows', { sessionId });
       console.log(`📊 Initial windows: ${initialWindows.data.count}`);
       console.log(`   Current window: ${initialWindows.data.current}`);
 
@@ -41,7 +48,7 @@ class MultiWindowTestingExample {
       console.log('\n🆕 Opening additional windows...');
 
       // Window 1: Search page
-      const window1 = await this.client.executeTool('open_new_window', {
+      const window1 = await mcpClient.callTool('open_new_window', {
         url: 'https://duckduckgo.com',
         type: 'window',
         focus: false,
@@ -52,7 +59,7 @@ class MultiWindowTestingExample {
       console.log(`   ✅ Search window: ${window1.data.handle}`);
 
       // Window 2: Documentation
-      const window2 = await this.client.executeTool('open_new_window', {
+      const window2 = await mcpClient.callTool('open_new_window', {
         url: 'https://developer.mozilla.org',
         type: 'window',
         focus: false,
@@ -63,7 +70,7 @@ class MultiWindowTestingExample {
       console.log(`   ✅ Documentation window: ${window2.data.handle}`);
 
       // Window 3: Testing tools
-      const window3 = await this.client.executeTool('open_new_window', {
+      const window3 = await mcpClient.callTool('open_new_window', {
         url: 'https://httpbin.org',
         type: 'window',
         focus: false,
@@ -75,7 +82,7 @@ class MultiWindowTestingExample {
 
       // 5. List all windows
       console.log('\n📋 Current window inventory:');
-      const allWindows = await this.client.executeTool('get_windows', { sessionId });
+      const allWindows = await mcpClient.callTool('get_windows', { sessionId });
 
       allWindows.data.windows.forEach((window, index) => {
         const active = window.isActive ? '🎯 Active' : '  Inactive';
@@ -88,7 +95,7 @@ class MultiWindowTestingExample {
 
       // 6. Test window arrangement - Cascade Layout
       console.log('\n🎨 Arranging windows in cascade layout...');
-      await this.client.executeTool('arrange_windows', {
+      await mcpClient.callTool('arrange_windows', {
         layout: 'cascade',
         sessionId
       });
@@ -97,7 +104,7 @@ class MultiWindowTestingExample {
 
       // 7. Test window arrangement - Tile Layout
       console.log('🎨 Arranging windows in tile layout...');
-      await this.client.executeTool('arrange_windows', {
+      await mcpClient.callTool('arrange_windows', {
         layout: 'tile',
         sessionId
       });
@@ -113,7 +120,7 @@ class MultiWindowTestingExample {
         size: { width: 800, height: 600 }
       }));
 
-      await this.client.executeTool('arrange_windows', {
+      await mcpClient.callTool('arrange_windows', {
         layout: 'custom',
         customLayout,
         sessionId
@@ -126,24 +133,24 @@ class MultiWindowTestingExample {
         const window = allWindows.data.windows[i];
 
         console.log(`\n   Switching to window ${i + 1}: ${window.title}`);
-        await this.client.executeTool('switch_window', {
+        await mcpClient.callTool('switch_window', {
           target: window.handle,
           sessionId
         });
 
         // Get page title and URL
-        const currentUrl = await this.client.executeTool('get_current_url', { sessionId });
+        const currentUrl = await mcpClient.callTool('get_current_url', { sessionId });
         console.log(`   📍 Current: ${currentUrl.data.title} - ${currentUrl.data.url}`);
 
         // Take a screenshot of each window
-        await this.client.executeTool('take_screenshot', {
+        await mcpClient.callTool('take_screenshot', {
           format: 'png',
           sessionId
         });
         console.log(`   📸 Screenshot captured`);
 
         // Extract some content
-        const pageContent = await this.client.executeTool('get_page_content', {
+        const pageContent = await mcpClient.callTool('get_page_content', {
           format: 'text',
           selector: 'h1, title',
           sessionId
@@ -161,13 +168,13 @@ class MultiWindowTestingExample {
       console.log('\n🖼️  Testing iframe coordination...');
 
       // Navigate to page with iframes
-      await this.client.executeTool('navigate_to', {
+      await mcpClient.callTool('navigate_to', {
         url: 'https://www.w3schools.com/html/html_iframe.asp',
         sessionId
       });
 
       // Discover frames
-      const framesResult = await this.client.executeTool('get_frames', { sessionId });
+      const framesResult = await mcpClient.callTool('get_frames', { sessionId });
       console.log(`   🔍 Found ${framesResult.data.count} iframes`);
 
       if (framesResult.data.frames.length > 0) {
@@ -175,14 +182,14 @@ class MultiWindowTestingExample {
         console.log(`   🎯 Testing frame: ${frame.selector}`);
 
         // Switch to frame
-        await this.client.executeTool('switch_to_frame', {
+        await mcpClient.callTool('switch_to_frame', {
           target: frame.index,
           waitForLoad: true,
           sessionId
         });
 
         // Execute code in frame
-        const frameResult = await this.client.executeTool('execute_in_frame', {
+        const frameResult = await mcpClient.callTool('execute_in_frame', {
           frame: frame.index,
           script: 'return document.title || "No title";',
           sessionId
@@ -191,19 +198,19 @@ class MultiWindowTestingExample {
         console.log(`   📜 Frame content: ${frameResult.data.result}`);
 
         // Switch back to parent
-        await this.client.executeTool('switch_to_parent_frame', { sessionId });
+        await mcpClient.callTool('switch_to_parent_frame', { sessionId });
       }
 
       // 11. Test performance across multiple windows
       console.log('\n⚡ Testing performance across windows...');
 
       for (const window of allWindows.data.windows.slice(0, 2)) {
-        await this.client.executeTool('switch_window', {
+        await mcpClient.callTool('switch_window', {
           target: window.handle,
           sessionId
         });
 
-        const perfMetrics = await this.client.executeTool('get_performance_metrics', { sessionId });
+        const perfMetrics = await mcpClient.callTool('get_performance_metrics', { sessionId });
 
         console.log(`   📊 ${window.title} performance:`);
         console.log(`      Load time: ${perfMetrics.data.metrics.navigation.loadTime}ms`);
@@ -218,7 +225,7 @@ class MultiWindowTestingExample {
       const windowsToClose = allWindows.data.windows.slice(1); // Skip first window
 
       for (const window of windowsToClose) {
-        await this.client.executeTool('close_window', {
+        await mcpClient.callTool('close_window', {
           handle: window.handle,
           force: false,
           sessionId
@@ -227,18 +234,18 @@ class MultiWindowTestingExample {
       }
 
       // Final window status
-      const finalWindows = await this.client.executeTool('get_windows', { sessionId });
+      const finalWindows = await mcpClient.callTool('get_windows', { sessionId });
       console.log(`\n📊 Final windows: ${finalWindows.data.count}`);
 
       // 13. Take final screenshot
-      await this.client.executeTool('take_screenshot', {
+      await mcpClient.callTool('take_screenshot', {
         fullPage: true,
         format: 'png',
         sessionId
       });
 
       // Cleanup session
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
       console.log('\n🎉 Multi-window testing workflow completed successfully!');
       console.log('🏢 This demonstrates enterprise-grade window management:');
@@ -258,15 +265,18 @@ class MultiWindowTestingExample {
   async runQuickWindowTest() {
     console.log('⚡ Quick Window Test - Basic Operations\n');
 
+    // NOTE: 'mcpClient' represents your MCP client connection
+    const mcpClient = this; // Placeholder for actual MCP client
+
     try {
-      const sessionResult = await this.client.executeTool('create_session', {
+      const sessionResult = await mcpClient.callTool('create_session', {
         browserType: 'chrome',
         headless: true
       });
       const sessionId = sessionResult.data.sessionId;
 
       // Open a new tab
-      await this.client.executeTool('open_new_window', {
+      await mcpClient.callTool('open_new_window', {
         url: 'https://example.com',
         type: 'tab',
         focus: true,
@@ -274,18 +284,18 @@ class MultiWindowTestingExample {
       });
 
       // List windows
-      const windows = await this.client.executeTool('get_windows', { sessionId });
+      const windows = await mcpClient.callTool('get_windows', { sessionId });
       console.log(`✅ Total windows: ${windows.data.count}`);
 
       // Switch between windows
-      await this.client.executeTool('switch_window', {
+      await mcpClient.callTool('switch_window', {
         target: 0,
         sessionId
       });
 
       console.log('✅ Window switching successful');
 
-      await this.client.executeTool('close_session', { sessionId });
+      await mcpClient.callTool('close_session', { sessionId });
 
     } catch (error) {
       console.error('❌ Quick window test failed:', error);
