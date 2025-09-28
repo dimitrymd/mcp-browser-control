@@ -413,4 +413,6 @@ inventory/local
 local-config/
 private-keys/
 test-credentials/
-local-overrides/
+local-overrides/config/google-service-account.json
+config/*.json
+browser-control/

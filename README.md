@@ -1,19 +1,21 @@
 # MCP Browser Control Server
 
-🎵🎬 **The World's First Complete Media Testing Platform with Revolutionary Audio & Video Capabilities** 🎬🎵
+🎵🎬📊 **The World's First Complete Website Intelligence Platform with Revolutionary Multimedia & SEO Capabilities** 📊🎬🎵
 
-A complete, enterprise-grade MCP (Model Context Protocol) server for browser automation using Selenium WebDriver. This platform provides **62 comprehensive tools** across **15 categories** with **revolutionary audio and video testing capabilities** that establish new industry standards for media testing excellence.
+A complete, enterprise-grade MCP (Model Context Protocol) server for browser automation using Selenium WebDriver. This platform provides **70+ comprehensive tools** across **16 categories** with **revolutionary audio and video testing capabilities** plus **Google-powered SEO intelligence** that establish new industry standards for website analysis excellence.
 
 ## 🌟 Revolutionary Features
 
 - **🎵 Revolutionary Audio Testing**: Real playback detection with currentTime monitoring (WORLD'S FIRST)
 - **🎬 Revolutionary Video Testing**: Frame advancement detection with quality analysis (INDUSTRY-FIRST)
-- **🌐 Complete Browser Automation**: 62 comprehensive tools across all web interaction scenarios
+- **🌐 Complete Browser Automation**: 70+ comprehensive tools across all web interaction scenarios
 - **📺 Complete Media Platform**: Audio + Video testing with sync analysis and performance profiling
 - **🏢 Enterprise-Grade Architecture**: Authentication, session pooling, monitoring, and scaling
 - **🔒 Advanced Security**: Multi-layer validation, XSS prevention, and role-based access control
 - **📊 Professional Data Extraction**: Advanced table processing, structured data extraction, and CSV export
 - **💾 Intelligent Content Caching**: Automatic page content and screenshot caching for large-scale analysis
+- **🎯 Google-Powered SEO Intelligence**: Official Lighthouse data, Core Web Vitals, and competitive analysis
+- **🏢 Competitive Intelligence**: Automated competitor monitoring and market positioning analysis
 - **🪟 Multi-Window Management**: Enterprise layout algorithms and window coordination
 - **📡 Network Monitoring**: HAR-compatible request capture and performance analysis
 - **⚡ Performance Profiling**: FPS monitoring, jank detection, and optimization recommendations
@@ -355,6 +357,91 @@ Daewoo,Matiz,2006,1599,EUR,139,Manual,Gasoline,"Daewoo Matiz an. 2006",999.md
 - **Market Research**: Track product availability and pricing trends
 - **Lead Generation**: Extract business contact information and opportunities
 - **Content Analysis**: Analyze website content and structure across competitors
+
+## Google-Powered SEO Intelligence Tools (7 tools)
+
+### **Revolutionary Website Analysis Capabilities**
+**FIRST MCP platform with professional Google Lighthouse integration**
+
+#### analyze_core_web_vitals
+Analyze Core Web Vitals (LCP, FID, CLS, INP, FCP, TTFB) with official Google data and A-F performance grading.
+
+```json
+{
+  "tool": "analyze_core_web_vitals",
+  "arguments": {
+    "mobile": false,
+    "includeFieldData": true
+  }
+}
+```
+
+#### analyze_page_speed
+Comprehensive Google Lighthouse analysis with 4-category scoring (Performance, SEO, Accessibility, Best Practices).
+
+```json
+{
+  "tool": "analyze_page_speed",
+  "arguments": {
+    "strategy": "desktop",
+    "includeScreenshot": false
+  }
+}
+```
+
+#### detect_performance_issues
+Detect performance issues with business impact analysis (UX impact, SEO ranking impact, conversion loss risk).
+
+```json
+{
+  "tool": "detect_performance_issues",
+  "arguments": {
+    "thresholds": {"loadTime": 3000, "lcp": 2500}
+  }
+}
+```
+
+#### benchmark_performance
+Benchmark performance against industry standards with percentile ranking and improvement recommendations.
+
+```json
+{
+  "tool": "benchmark_performance",
+  "arguments": {
+    "industryType": "saas",
+    "competitorUrls": ["https://competitor1.com", "https://competitor2.com"]
+  }
+}
+```
+
+#### monitor_competitor_seo
+**REVOLUTIONARY**: Monitor competitor SEO performance with Google Lighthouse data and competitive intelligence.
+
+```json
+{
+  "tool": "monitor_competitor_seo",
+  "arguments": {
+    "competitorUrls": ["https://competitor1.com", "https://competitor2.com"],
+    "metrics": ["performance", "seo", "accessibility"],
+    "alertThresholds": {"performanceScore": 90}
+  }
+}
+```
+
+#### audit_meta_tags
+Comprehensive meta tag audit with SEO optimization recommendations and social media tag analysis.
+
+```json
+{
+  "tool": "audit_meta_tags",
+  "arguments": {
+    "includeOpenGraph": true,
+    "includeTwitterCards": true
+  }
+}
+```
+
+**Google API Configuration**: Set `GOOGLE_PAGESPEED_API_KEY` environment variable for official Google Lighthouse data. See `GOOGLE_API.md` for setup instructions.
 
 #### take_screenshot
 Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `browser-control/screenshots/` directory in your current working project with timestamped filenames.

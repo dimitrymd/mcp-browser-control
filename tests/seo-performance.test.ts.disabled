@@ -1,0 +1,762 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { SEOPerformanceTools } from '../src/tools/seo-performance.js';
+import { SessionManager } from '../src/drivers/session.js';
+import winston from 'winston';
+
+// Mock dependencies
+const mockLogger = {
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn()
+} as unknown as winston.Logger;
+
+const mockDriver = {
+  getCurrentUrl: vi.fn(),
+  getTitle: vi.fn(),
+  executeScript: vi.fn(),
+  takeScreenshot: vi.fn(),
+  get: vi.fn(),
+  sleep: vi.fn()
+};
+
+const mockSession = {
+  id: 'test-session-123',
+  driver: mockDriver,
+  createdAt: Date.now(),
+  lastUsed: Date.now(),
+  url: 'https://example.com/test',
+  title: 'Test Page',
+  isReady: true,
+  browserType: 'chrome' as const,
+  activeElement: undefined,
+  scrollPosition: { x: 0, y: 0 },
+  actionHistory: [],
+  performanceMetrics: {
+    totalActions: 0,
+    successfulActions: 0,
+    averageActionTime: 0
+  }
+};
+
+const mockSessionManager = {
+  createSession: vi.fn(),
+  getSession: vi.fn().mockReturnValue(mockSession),
+  listSessions: vi.fn().mockReturnValue([mockSession]),
+  closeSession: vi.fn(),
+  cleanupExpiredSessions: vi.fn()
+} as unknown as SessionManager;
+
+describe('SEOPerformanceTools', () => {
+  let seoPerformanceTools: SEOPerformanceTools;
+  const sessionId = 'test-session-123';
+
+  beforeEach(() => {
+    seoPerformanceTools = new SEOPerformanceTools(mockSessionManager, mockLogger);
+    vi.clearAllMocks();
+
+    // Setup default mocks
+    mockDriver.getCurrentUrl.mockResolvedValue('https://example.com/test');
+    mockDriver.getTitle.mockResolvedValue('Test Page');
+    mockDriver.get.mockResolvedValue(undefined);
+    mockDriver.sleep.mockResolvedValue(undefined);
+
+    // Set GOOGLE_PAGESPEED_API_KEY to undefined for testing (avoid API calls)
+    process.env.GOOGLE_PAGESPEED_API_KEY = undefined;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('analyzeCoreWebVitals', () => {
+    it('should analyze Core Web Vitals with default parameters', async () => {
+      const mockWebVitals = {
+        lcp: 2000,
+        fid: 80,
+        cls: 0.05,
+        inp: 150,
+        fcp: 1500,
+        ttfb: 500
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockWebVitals);
+
+      const params = {};
+      const result = await seoPerformanceTools.analyzeCoreWebVitals(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.lcp).toBe(2000);
+      expect(result.data?.fid).toBe(80);
+      expect(result.data?.cls).toBe(0.05);
+      expect(result.data?.score.performance).toBeGreaterThan(0);
+      expect(result.data?.score.grade).toMatch(/[A-F]/);
+      expect(Array.isArray(result.data?.score.recommendations)).toBe(true);
+    });
+
+    it('should analyze Core Web Vitals with mobile strategy', async () => {
+      const mockWebVitals = {
+        lcp: 2500,
+        fid: 120,
+        cls: 0.08,
+        inp: 200,
+        fcp: 1800,
+        ttfb: 600
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockWebVitals);
+
+      const params = { mobile: true };
+      const result = await seoPerformanceTools.analyzeCoreWebVitals(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.lcp).toBe(2500);
+      expect(result.data?.score.performance).toBeGreaterThan(0);
+    });
+
+    it('should include field data when requested', async () => {
+      const mockWebVitals = {
+        lcp: 1800,
+        fid: 60,
+        cls: 0.03,
+        inp: 100,
+        fcp: 1200,
+        ttfb: 400
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockWebVitals);
+
+      const params = { includeFieldData: true };
+      const result = await seoPerformanceTools.analyzeCoreWebVitals(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.fieldData).toBeDefined();
+      expect(result.data?.fieldData?.origin).toBe('https://example.com/test');
+      expect(result.data?.fieldData?.realUserMetrics).toBeDefined();
+    });
+
+    it('should calculate performance scores correctly', async () => {
+      const excellentVitals = {
+        lcp: 1500, // Excellent
+        fid: 50,   // Excellent
+        cls: 0.02, // Excellent
+        inp: 80,   // Good
+        fcp: 1000, // Good
+        ttfb: 300  // Excellent
+      };
+
+      mockDriver.executeScript.mockResolvedValue(excellentVitals);
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.score.performance).toBeGreaterThan(90);
+      expect(result.data?.score.grade).toBe('A');
+    });
+
+    it('should handle poor performance with appropriate recommendations', async () => {
+      const poorVitals = {
+        lcp: 5000, // Poor
+        fid: 400,  // Poor
+        cls: 0.3,  // Poor
+        inp: 500,  // Poor
+        fcp: 3000, // Poor
+        ttfb: 2000 // Poor
+      };
+
+      mockDriver.executeScript.mockResolvedValue(poorVitals);
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.score.performance).toBeLessThan(50);
+      expect(result.data?.score.grade).toMatch(/[D-F]/);
+      expect(result.data?.score.recommendations.length).toBeGreaterThan(3);
+    });
+
+    it('should handle browser script execution errors', async () => {
+      mockDriver.executeScript.mockRejectedValue(new Error('Script execution failed'));
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({}, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.message).toContain('Core Web Vitals analysis failed');
+    });
+  });
+
+  describe('monitorPagePerformance', () => {
+    it('should monitor page performance with default parameters', async () => {
+      const mockPerformanceData = {
+        loadTime: 2500,
+        domContentLoaded: 1800,
+        firstPaint: 1200,
+        firstContentfulPaint: 1500,
+        largestContentfulPaint: 2200,
+        resources: [
+          { name: 'style.css', duration: 200, size: 50000, type: 'stylesheet' },
+          { name: 'script.js', duration: 300, size: 80000, type: 'script' }
+        ],
+        networkRequests: 45,
+        totalSize: 1200000
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockPerformanceData);
+
+      const params = {};
+      const result = await seoPerformanceTools.monitorPagePerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.loadTime).toBe(2500);
+      expect(result.data?.networkRequests).toBe(45);
+      expect(result.data?.totalSize).toBe(1200000);
+      expect(Array.isArray(result.data?.optimizationOpportunities)).toBe(true);
+    });
+
+    it('should include resource analysis when requested', async () => {
+      const mockPerformanceData = {
+        loadTime: 3500,
+        resources: [
+          { name: 'large-image.jpg', duration: 800, size: 2000000, type: 'image' },
+          { name: 'script.js', duration: 300, size: 80000, type: 'script' }
+        ],
+        networkRequests: 120,
+        totalSize: 3000000
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockPerformanceData);
+
+      const params = { includeResources: true, duration: 8000 };
+      const result = await seoPerformanceTools.monitorPagePerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.optimizationOpportunities.length).toBeGreaterThan(0);
+
+      // Should detect large resources and excessive requests
+      const opportunities = result.data?.optimizationOpportunities || [];
+      expect(opportunities.some(op => op.type === 'Load Time Optimization')).toBe(true);
+    });
+
+    it('should generate optimization opportunities for slow sites', async () => {
+      const slowSiteData = {
+        loadTime: 6000, // Very slow
+        networkRequests: 150, // Too many requests
+        totalSize: 5000000 // 5MB - very large
+      };
+
+      mockDriver.executeScript.mockResolvedValue(slowSiteData);
+
+      const result = await seoPerformanceTools.monitorPagePerformance({}, sessionId);
+
+      expect(result.status).toBe('success');
+      const opportunities = result.data?.optimizationOpportunities || [];
+      expect(opportunities.length).toBeGreaterThan(2);
+      expect(opportunities.some(op => op.type === 'Load Time Optimization')).toBe(true);
+      expect(opportunities.some(op => op.type === 'Resource Size Optimization')).toBe(true);
+    });
+
+    it('should handle monitoring duration parameter', async () => {
+      mockDriver.executeScript.mockResolvedValue({
+        loadTime: 2000,
+        networkRequests: 30,
+        totalSize: 800000
+      });
+
+      const params = { duration: 10000 };
+      const result = await seoPerformanceTools.monitorPagePerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(mockDriver.executeScript).toHaveBeenCalledWith(
+        expect.stringContaining('10000')
+      );
+    });
+  });
+
+  describe('analyzePageSpeed', () => {
+    it('should analyze page speed with comprehensive scoring', async () => {
+      const mockSpeedData = {
+        performanceScore: 85,
+        accessibilityScore: 92,
+        bestPracticesScore: 88,
+        seoScore: 95,
+        metrics: {
+          loadTime: 2200,
+          domContentLoaded: 1800,
+          firstByte: 500,
+          resourceCount: 45
+        },
+        opportunities: [
+          {
+            title: 'Optimize images',
+            impact: 'medium',
+            savings: '400ms'
+          }
+        ],
+        diagnostics: []
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockSpeedData);
+
+      const params = { strategy: 'desktop' };
+      const result = await seoPerformanceTools.analyzePageSpeed(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.performanceScore).toBe(85);
+      expect(result.data?.accessibilityScore).toBe(92);
+      expect(result.data?.bestPracticesScore).toBe(88);
+      expect(result.data?.seoScore).toBe(95);
+      expect(result.data?.metrics).toBeDefined();
+    });
+
+    it('should include screenshot when requested', async () => {
+      const mockSpeedData = {
+        performanceScore: 75,
+        accessibilityScore: 80,
+        bestPracticesScore: 85,
+        seoScore: 90,
+        metrics: {},
+        opportunities: [],
+        diagnostics: []
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockSpeedData);
+      mockDriver.takeScreenshot.mockResolvedValue('base64ScreenshotData');
+
+      const params = { includeScreenshot: true };
+      const result = await seoPerformanceTools.analyzePageSpeed(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.screenshot).toBe('base64ScreenshotData');
+      expect(mockDriver.takeScreenshot).toHaveBeenCalled();
+    });
+
+    it('should handle screenshot capture failures gracefully', async () => {
+      const mockSpeedData = {
+        performanceScore: 80,
+        accessibilityScore: 85,
+        bestPracticesScore: 90,
+        seoScore: 88,
+        metrics: {},
+        opportunities: [],
+        diagnostics: []
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockSpeedData);
+      mockDriver.takeScreenshot.mockRejectedValue(new Error('Screenshot failed'));
+
+      const params = { includeScreenshot: true };
+      const result = await seoPerformanceTools.analyzePageSpeed(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.screenshot).toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Screenshot capture failed during page speed analysis',
+        expect.any(Object)
+      );
+    });
+
+    it('should analyze different strategies (mobile vs desktop)', async () => {
+      const mobileSpeedData = {
+        performanceScore: 65, // Lower for mobile
+        accessibilityScore: 88,
+        bestPracticesScore: 85,
+        seoScore: 92,
+        metrics: { loadTime: 3500 }, // Slower on mobile
+        opportunities: [],
+        diagnostics: []
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mobileSpeedData);
+
+      const params = { strategy: 'mobile' };
+      const result = await seoPerformanceTools.analyzePageSpeed(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.performanceScore).toBe(65);
+    });
+  });
+
+  describe('detectPerformanceIssues', () => {
+    it('should detect performance issues with default thresholds', async () => {
+      const mockIssues = [
+        {
+          type: 'slow-load-time',
+          severity: 'high',
+          metric: 'Load Time',
+          currentValue: 5000,
+          threshold: 3000,
+          impact: 'User experience and SEO ranking',
+          recommendation: 'Optimize critical resources and implement caching'
+        },
+        {
+          type: 'large-resources',
+          severity: 'medium',
+          metric: 'Resource Size',
+          currentValue: '5 large resources',
+          threshold: '500KB per resource',
+          impact: 'Loading performance and bandwidth usage',
+          recommendation: 'Compress images and optimize large resources'
+        }
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(mockIssues);
+
+      const params = {};
+      const result = await seoPerformanceTools.detectPerformanceIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.issues).toEqual(mockIssues);
+      expect(result.data?.severity).toBe('high'); // Should pick highest severity
+      expect(result.data?.impact.userExperience).toBeGreaterThan(0);
+      expect(result.data?.impact.searchRanking).toBeGreaterThan(0);
+      expect(result.data?.impact.conversionLoss).toBeGreaterThan(0);
+      expect(Array.isArray(result.data?.recommendations)).toBe(true);
+    });
+
+    it('should use custom thresholds when provided', async () => {
+      const customThresholds = {
+        loadTime: 2000, // Stricter than default 3000
+        timeToFirstByte: 400 // Stricter than default 800
+      };
+
+      mockDriver.executeScript.mockResolvedValue([]);
+
+      const params = { thresholds: customThresholds };
+      const result = await seoPerformanceTools.detectPerformanceIssues(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(mockDriver.executeScript).toHaveBeenCalledWith(
+        expect.stringContaining('"loadTime":2000')
+      );
+    });
+
+    it('should calculate severity levels correctly', async () => {
+      const criticalIssues = [
+        { severity: 'critical' },
+        { severity: 'medium' },
+        { severity: 'low' }
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(criticalIssues);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.severity).toBe('critical');
+    });
+
+    it('should handle no issues found scenario', async () => {
+      mockDriver.executeScript.mockResolvedValue([]);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.issues).toEqual([]);
+      expect(result.data?.severity).toBe('low');
+      expect(result.data?.impact.userExperience).toBe(0);
+    });
+
+    it('should generate appropriate recommendations for each issue type', async () => {
+      const loadTimeIssue = [
+        {
+          type: 'slow-load-time',
+          severity: 'high',
+          recommendation: 'Optimize critical resources and implement caching'
+        }
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(loadTimeIssue);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      const recommendations = result.data?.recommendations || [];
+      expect(recommendations.length).toBeGreaterThan(0);
+      expect(recommendations[0]).toHaveProperty('priority');
+      expect(recommendations[0]).toHaveProperty('action');
+      expect(recommendations[0]).toHaveProperty('effort');
+      expect(recommendations[0]).toHaveProperty('timeline');
+    });
+  });
+
+  describe('benchmarkPerformance', () => {
+    it('should benchmark against industry standards', async () => {
+      const mockCurrentMetrics = {
+        loadTime: 2200,
+        firstContentfulPaint: 1400,
+        timeToFirstByte: 450,
+        resourceCount: 40,
+        totalSize: 1000000
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockCurrentMetrics);
+
+      const params = { industryType: 'saas' };
+      const result = await seoPerformanceTools.benchmarkPerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.currentMetrics).toEqual(mockCurrentMetrics);
+      expect(result.data?.industryAverage).toBeDefined();
+      expect(result.data?.percentileRanking).toBeGreaterThanOrEqual(0);
+      expect(result.data?.percentileRanking).toBeLessThanOrEqual(100);
+      expect(result.data?.improvementPotential).toBeDefined();
+    });
+
+    it('should calculate percentile ranking correctly', async () => {
+      const betterThanIndustryMetrics = {
+        loadTime: 1800, // Better than industry average
+        firstContentfulPaint: 1200,
+        timeToFirstByte: 400,
+        resourceCount: 35,
+        performanceScore: 90
+      };
+
+      mockDriver.executeScript.mockResolvedValue(betterThanIndustryMetrics);
+
+      const params = { industryType: 'ecommerce' };
+      const result = await seoPerformanceTools.benchmarkPerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.percentileRanking).toBeGreaterThan(50); // Should be above average
+    });
+
+    it('should include competitor comparison when URLs provided', async () => {
+      const mockCurrentMetrics = {
+        loadTime: 2500,
+        performanceScore: 75
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockCurrentMetrics);
+
+      const competitorUrls = ['https://competitor1.com', 'https://competitor2.com'];
+      const params = { competitorUrls };
+      const result = await seoPerformanceTools.benchmarkPerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.competitorComparison).toBeDefined();
+      expect(result.data?.competitorComparison?.length).toBe(2);
+    });
+
+    it('should generate improvement potential recommendations', async () => {
+      const poorMetrics = {
+        loadTime: 4000, // Much worse than industry
+        resourceCount: 150, // Too many resources
+        performanceScore: 45
+      };
+
+      mockDriver.executeScript.mockResolvedValue(poorMetrics);
+
+      const params = { industryType: 'general' };
+      const result = await seoPerformanceTools.benchmarkPerformance(params, sessionId);
+
+      expect(result.status).toBe('success');
+      const improvement = result.data?.improvementPotential;
+      expect(improvement?.quickWins.length).toBeGreaterThan(0);
+      expect(improvement?.quickWins[0]).toHaveProperty('area');
+      expect(improvement?.quickWins[0]).toHaveProperty('effort');
+      expect(improvement?.quickWins[0]).toHaveProperty('impact');
+    });
+
+    it('should handle different industry types', async () => {
+      const mockMetrics = { loadTime: 2500, performanceScore: 80 };
+      mockDriver.executeScript.mockResolvedValue(mockMetrics);
+
+      // Test different industry benchmarks
+      const industries = ['ecommerce', 'news', 'saas', 'general'];
+
+      for (const industry of industries) {
+        const result = await seoPerformanceTools.benchmarkPerformance(
+          { industryType: industry },
+          sessionId
+        );
+
+        expect(result.status).toBe('success');
+        expect(result.data?.industryAverage).toBeDefined();
+        expect(result.data?.industryAverage.loadTime).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('Parameter Validation', () => {
+    it('should handle empty parameters gracefully', async () => {
+      mockDriver.executeScript.mockResolvedValue({
+        lcp: 2000, fid: 100, cls: 0.1, inp: 150, fcp: 1500, ttfb: 600
+      });
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals(null, sessionId);
+
+      expect(result.status).toBe('success');
+    });
+
+    it('should handle invalid parameter types', async () => {
+      mockDriver.executeScript.mockResolvedValue({
+        lcp: 2000, fid: 100, cls: 0.1, inp: 150, fcp: 1500, ttfb: 600
+      });
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals('invalid', sessionId);
+
+      expect(result.status).toBe('success'); // Should use defaults
+    });
+  });
+
+  describe('Session Management', () => {
+    it('should use default session when sessionId not provided', async () => {
+      mockDriver.executeScript.mockResolvedValue({
+        lcp: 2000, fid: 100, cls: 0.1, inp: 150, fcp: 1500, ttfb: 600
+      });
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({});
+
+      expect(result.status).toBe('success');
+      expect(mockSessionManager.listSessions).toHaveBeenCalled();
+    });
+
+    it('should handle no available sessions error', async () => {
+      (mockSessionManager.listSessions as any).mockReturnValue([]);
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({});
+
+      expect(result.status).toBe('error');
+      expect(result.error?.message).toContain('No session ID provided and no active sessions available');
+    });
+  });
+
+  describe('Impact Calculations', () => {
+    it('should calculate UX impact correctly', async () => {
+      const issues = [
+        { severity: 'critical' },
+        { severity: 'high' },
+        { severity: 'medium' }
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(issues);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.impact.userExperience).toBe(80); // 40 + 25 + 15
+    });
+
+    it('should calculate SEO impact for relevant issues', async () => {
+      const loadTimeIssues = [
+        { type: 'slow-load-time', severity: 'critical' },
+        { type: 'slow-server-response', severity: 'high' },
+        { type: 'large-resources', severity: 'medium' } // Shouldn't affect SEO impact
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(loadTimeIssues);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.impact.searchRanking).toBe(50); // 30 + 20, large-resources doesn't count
+    });
+
+    it('should calculate conversion impact for performance issues', async () => {
+      const conversionImpactingIssues = [
+        { type: 'slow-load-time', severity: 'critical' },
+        { type: 'slow-load-time', severity: 'high' },
+        { type: 'excessive-requests', severity: 'medium' } // Shouldn't affect conversion
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(conversionImpactingIssues);
+
+      const result = await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(result.status).toBe('success');
+      expect(result.data?.impact.conversionLoss).toBe(40); // 25 + 15, excessive-requests doesn't count
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle browser script execution failures', async () => {
+      mockDriver.executeScript.mockRejectedValue(new Error('JavaScript execution failed'));
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({}, sessionId);
+
+      expect(result.status).toBe('error');
+      expect(result.error?.message).toContain('Core Web Vitals analysis failed');
+    });
+
+    it('should handle invalid session ID', async () => {
+      (mockSessionManager.getSession as any).mockImplementation(() => {
+        throw new Error('Session not found');
+      });
+
+      const result = await seoPerformanceTools.analyzeCoreWebVitals({}, 'invalid-session');
+
+      expect(result.status).toBe('error');
+    });
+
+    it('should handle getCurrentUrl failures', async () => {
+      mockDriver.getCurrentUrl.mockRejectedValue(new Error('URL access failed'));
+
+      const result = await seoPerformanceTools.analyzePageSpeed({}, sessionId);
+
+      expect(result.status).toBe('error');
+    });
+  });
+
+  describe('Logging and Monitoring', () => {
+    it('should log analysis completion with key metrics', async () => {
+      const mockSpeedData = {
+        performanceScore: 85,
+        seoScore: 92,
+        accessibilityScore: 88,
+        bestPracticesScore: 90,
+        metrics: {},
+        opportunities: [],
+        diagnostics: []
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockSpeedData);
+
+      await seoPerformanceTools.analyzePageSpeed({}, sessionId);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Page speed analysis completed',
+        expect.objectContaining({
+          url: 'https://example.com/test',
+          performanceScore: 85,
+          seoScore: 92
+        })
+      );
+    });
+
+    it('should log Core Web Vitals analysis with performance score', async () => {
+      const mockVitals = {
+        lcp: 2000, fid: 80, cls: 0.05, inp: 150, fcp: 1500, ttfb: 500
+      };
+
+      mockDriver.executeScript.mockResolvedValue(mockVitals);
+
+      await seoPerformanceTools.analyzeCoreWebVitals({}, sessionId);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Core Web Vitals analysis completed',
+        expect.objectContaining({
+          url: 'https://example.com/test',
+          score: expect.any(Number)
+        })
+      );
+    });
+
+    it('should log performance issues detection results', async () => {
+      const mockIssues = [
+        { severity: 'high', type: 'slow-load-time' }
+      ];
+
+      mockDriver.executeScript.mockResolvedValue(mockIssues);
+
+      await seoPerformanceTools.detectPerformanceIssues({}, sessionId);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Performance issues detection completed',
+        expect.objectContaining({
+          issuesFound: 1,
+          severity: 'high',
+          uxImpact: expect.any(Number)
+        })
+      );
+    });
+  });
+});

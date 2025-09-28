@@ -13,6 +13,7 @@ import { FrameTools } from './frames.js';
 import { NetworkTools } from './network.js';
 import { PerformanceTools } from './performance.js';
 import { VideoTools } from './video.js';
+import { SEOPerformanceTools } from './seo-performance.js';
 import { SessionManager } from '../drivers/session.js';
 import winston from 'winston';
 
@@ -32,6 +33,7 @@ export interface ToolRegistry {
   network: NetworkTools;
   performance: PerformanceTools;
   video: VideoTools;
+  seoPerformance: SEOPerformanceTools;
 }
 
 export function createToolRegistry(sessionManager: SessionManager, logger: winston.Logger): ToolRegistry {
@@ -50,7 +52,8 @@ export function createToolRegistry(sessionManager: SessionManager, logger: winst
     frames: new FrameTools(sessionManager, logger),
     network: new NetworkTools(sessionManager, logger),
     performance: new PerformanceTools(sessionManager, logger),
-    video: new VideoTools(sessionManager, logger)
+    video: new VideoTools(sessionManager, logger),
+    seoPerformance: new SEOPerformanceTools(sessionManager, logger)
   };
 }
 
@@ -1900,6 +1903,232 @@ export const toolDefinitions = [
       },
       required: []
     }
+  },
+
+  // SEO Performance Analysis Tools
+  {
+    name: 'analyze_core_web_vitals',
+    description: 'Analyze Core Web Vitals (LCP, FID, CLS, INP, FCP, TTFB) with performance scoring',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        mobile: {
+          type: 'boolean',
+          default: false,
+          description: 'Test mobile vs desktop performance'
+        },
+        includeFieldData: {
+          type: 'boolean',
+          default: false,
+          description: 'Include real user metrics from Chrome UX Report'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'monitor_page_performance',
+    description: 'Monitor page performance with resource analysis and optimization opportunities',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        duration: {
+          type: 'number',
+          default: 5000,
+          description: 'Monitoring duration in milliseconds'
+        },
+        includeResources: {
+          type: 'boolean',
+          default: true,
+          description: 'Include resource loading analysis'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'analyze_page_speed',
+    description: 'Comprehensive page speed analysis with Lighthouse-style scoring (Performance, SEO, Accessibility, Best Practices)',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        strategy: {
+          type: 'string',
+          enum: ['mobile', 'desktop'],
+          default: 'desktop',
+          description: 'Analysis strategy - mobile or desktop'
+        },
+        category: {
+          type: 'string',
+          enum: ['performance', 'accessibility', 'best-practices', 'seo'],
+          default: 'performance',
+          description: 'Primary analysis category focus'
+        },
+        includeScreenshot: {
+          type: 'boolean',
+          default: false,
+          description: 'Include screenshot in analysis results'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'detect_performance_issues',
+    description: 'Detect performance issues with business impact analysis and optimization recommendations',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        thresholds: {
+          type: 'object',
+          description: 'Custom performance thresholds for issue detection'
+        },
+        monitoringDuration: {
+          type: 'number',
+          default: 5000,
+          description: 'Monitoring duration in milliseconds'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'benchmark_performance',
+    description: 'Benchmark performance against industry standards with percentile ranking and improvement recommendations',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        industryType: {
+          type: 'string',
+          enum: ['ecommerce', 'news', 'saas', 'general'],
+          default: 'general',
+          description: 'Industry type for benchmarking'
+        },
+        competitorUrls: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional competitor URLs for comparison'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+
+  // Sprint 2: Competitive Intelligence & Advanced SEO Tools
+  {
+    name: 'monitor_competitor_seo',
+    description: 'Monitor competitor SEO performance with Google Lighthouse data and competitive intelligence analysis',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        competitorUrls: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of competitor URLs to analyze'
+        },
+        metrics: {
+          type: 'array',
+          items: { type: 'string' },
+          default: ['performance', 'seo'],
+          description: 'Metrics to analyze (performance, seo, accessibility, best-practices)'
+        },
+        alertThresholds: {
+          type: 'object',
+          description: 'Alert thresholds for competitive threats (e.g., {performanceScore: 90})'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: ['competitorUrls']
+    }
+  },
+  {
+    name: 'audit_meta_tags',
+    description: 'Comprehensive meta tag audit with SEO optimization recommendations and social media tag analysis',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        includeOpenGraph: {
+          type: 'boolean',
+          default: true,
+          description: 'Include Open Graph (Facebook) meta tag analysis'
+        },
+        includeTwitterCards: {
+          type: 'boolean',
+          default: true,
+          description: 'Include Twitter Card meta tag analysis'
+        },
+        checkDuplicates: {
+          type: 'boolean',
+          default: true,
+          description: 'Check for duplicate meta tags and content'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'analyze_seo_content',
+    description: 'Comprehensive SEO content analysis with keyword density, readability scoring, and content quality assessment',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        targetKeywords: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of target keywords to analyze density for'
+        },
+        analyzeReadability: {
+          type: 'boolean',
+          default: true,
+          description: 'Include readability scoring analysis'
+        },
+        checkDuplicateContent: {
+          type: 'boolean',
+          default: false,
+          description: 'Check for duplicate content issues'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: []
+    }
   }
 ];
 
@@ -2067,6 +2296,26 @@ export function executeTool(
       return tools.video.monitorVideoEvents(params, sessionId);
     case 'detect_video_issues':
       return tools.video.detectVideoIssues(params, sessionId);
+
+    // SEO Performance Tools
+    case 'analyze_core_web_vitals':
+      return tools.seoPerformance.analyzeCoreWebVitals(params, sessionId);
+    case 'monitor_page_performance':
+      return tools.seoPerformance.monitorPagePerformance(params, sessionId);
+    case 'analyze_page_speed':
+      return tools.seoPerformance.analyzePageSpeed(params, sessionId);
+    case 'detect_performance_issues':
+      return tools.seoPerformance.detectPerformanceIssues(params, sessionId);
+    case 'benchmark_performance':
+      return tools.seoPerformance.benchmarkPerformance(params, sessionId);
+
+    // Sprint 2: Competitive Intelligence Tools
+    case 'monitor_competitor_seo':
+      return tools.seoPerformance.monitorCompetitorSEO(params, sessionId);
+    case 'audit_meta_tags':
+      return tools.seoPerformance.auditMetaTags(params, sessionId);
+    case 'analyze_seo_content':
+      return tools.seoPerformance.analyzeSEOContent(params, sessionId);
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);

@@ -1,7 +1,7 @@
 {
   "name": "mcp-browser-control",
   "version": "1.0.0",
-  "description": "MCP Server for browser automation using Selenium WebDriver",
+  "description": "Revolutionary MCP Server with 68+ tools: Browser automation, Google-powered SEO intelligence, multimedia testing, and competitive analysis",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -20,9 +20,24 @@
     "automation",
     "selenium",
     "webdriver",
-    "testing"
+    "testing",
+    "seo",
+    "lighthouse",
+    "competitive-analysis",
+    "website-intelligence",
+    "performance-analysis",
+    "google-api",
+    "business-intelligence"
   ],
-  "author": "MCP Browser Control Team",
+  "author": "Funway Interactive SRL <dimitrymd@gmail.com> (https://funwayinteractive.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dimitrymd/mcp-browser-control.git"
+  },
+  "homepage": "https://github.com/dimitrymd/mcp-browser-control",
+  "bugs": {
+    "url": "https://github.com/dimitrymd/mcp-browser-control/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
@@ -30,10 +45,13 @@
     "@types/inquirer": "^9.0.9",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.12.2",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
     "dotenv": "^16.4.0",
     "express": "^5.1.0",
+    "google-auth-library": "^10.3.0",
+    "googleapis": "^160.0.0",
     "inquirer": "^12.9.6",
     "jsonwebtoken": "^9.0.2",
     "ora": "^9.0.0",
