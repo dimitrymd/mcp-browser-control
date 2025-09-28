@@ -64,10 +64,28 @@ export class ExtractionTools {
       const url = await session.driver.getCurrentUrl();
       const title = await session.driver.getTitle();
 
+      // Generate filename and save to local pagecache directory
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const hostname = new URL(url).hostname.replace(/[^a-zA-Z0-9-]/g, '-');
+      const filename = `page-${hostname}-${timestamp}.${format === 'html' ? 'html' : format === 'markdown' ? 'md' : 'txt'}`;
+      const pagecacheDir = path.join(process.cwd(), 'pagecache');
+      const filePath = path.join(pagecacheDir, filename);
+
+      // Ensure pagecache directory exists
+      if (!fs.existsSync(pagecacheDir)) {
+        fs.mkdirSync(pagecacheDir, { recursive: true });
+      }
+
+      // Save page content to file
+      fs.writeFileSync(filePath, cleanText(content), 'utf8');
+
+      this.logger.info(`Page content saved to: ${filePath}`);
+
       return {
         status: 'success',
         data: {
-          content: cleanText(content),
+          content: `Page content saved to ${filePath}`,
+          path: filePath,
           metadata: { title, url, length: content.length }
         }
       };

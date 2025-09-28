@@ -121,6 +121,7 @@ geckodriver.log
 chromedriver.log
 screenshots/
 downloads/
+pagecache/
 
 # Session data and temporary files
 sessions/
