@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mcp-browser-control": {
+      "command": "npm",
+      "args": ["run", "dev"],
+      "cwd": "/Users/dimitrymd/Documents/prj/mcp-browser-control",
+      "env": {
+        "NODE_ENV": "development",
+        "BROWSER_TYPE": "chrome",
+        "HEADLESS": "true",
+        "MAX_SESSIONS": "5",
+        "SESSION_TIMEOUT": "600000",
+        "LOG_LEVEL": "debug"
+      }
+    }
+  }
+}

@@ -345,7 +345,7 @@ class MCPBrowserControlCLI {
         name: 'maxSessions',
         message: 'Maximum concurrent sessions:',
         default: 5,
-        validate: (value) => value > 0 && value <= 50
+        validate: (value: number) => value > 0 && value <= 50
       },
       {
         type: 'list',
@@ -365,7 +365,7 @@ class MCPBrowserControlCLI {
         name: 'port',
         message: 'Server port:',
         default: 3000,
-        validate: (value) => value > 1024 && value < 65536
+        validate: (value: number) => value > 1024 && value < 65536
       }
     ]);
 
@@ -501,8 +501,14 @@ class MCPBrowserControlCLI {
         const metrics: any = {};
 
         lines.forEach(line => {
-          const [nameAndLabels, value] = line.split(' ');
+          const splitLine = line.split(' ');
+          if (splitLine.length < 2) return;
+
+          const [nameAndLabels, value] = splitLine;
+          if (!nameAndLabels || !value) return;
+
           const [name] = nameAndLabels.split('{');
+          if (!name) return;
 
           if (!metrics[name]) {
             metrics[name] = [];
@@ -687,6 +693,34 @@ class MCPBrowserControlCLI {
       spinner.fail('Failed to cleanup sessions');
       console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
     }
+  }
+
+  /**
+   * Configuration management
+   */
+  private async manageConfig(options: any): Promise<void> {
+    console.log('Configuration management functionality coming soon...');
+  }
+
+  /**
+   * Run diagnostic tests
+   */
+  private async runTests(options: any): Promise<void> {
+    console.log('Test functionality coming soon...');
+  }
+
+  /**
+   * Show server logs
+   */
+  private async showLogs(options: any): Promise<void> {
+    console.log('Log viewing functionality coming soon...');
+  }
+
+  /**
+   * Install system dependencies
+   */
+  private async installDependencies(options: any): Promise<void> {
+    console.log('Dependency installation functionality coming soon...');
   }
 
   /**

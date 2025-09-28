@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { NextFunction } from 'express';
 
 export interface Permission {
   resource: string;

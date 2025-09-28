@@ -313,17 +313,29 @@ Extract page content in HTML, text, or markdown format.
 ```
 
 #### take_screenshot
-Capture screenshots of pages or specific elements.
+Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `screenshots/` directory with timestamped filenames.
 
 ```json
 {
   "tool": "take_screenshot",
   "arguments": {
     "selector": "#chart",
-    "format": "png"
+    "format": "png",
+    "fullPage": false
   }
 }
 ```
+
+**Response includes:**
+- `data`: Message indicating where the screenshot was saved
+- `path`: Full path to the saved screenshot file
+- `dimensions`: Width and height of the captured image
+
+**Parameters:**
+- `selector` (optional): CSS selector to capture specific element
+- `format` (optional): Image format (`png`, `jpeg`, `base64`) - defaults to `png`
+- `fullPage` (optional): Capture entire page or just viewport - defaults to `false`
+- `path` (optional): Custom filename (saved in `screenshots/` directory)
 
 ### Wait and Condition Tools (3 tools)
 
@@ -754,6 +766,7 @@ mcp-browser-control/
 │   └── development/           # Development guide
 ├── dist/                      # Compiled TypeScript output
 ├── logs/                      # Server logs
+├── screenshots/               # 📸 Auto-saved screenshot files
 └── cache/                     # Intelligent caching storage
 ```
 

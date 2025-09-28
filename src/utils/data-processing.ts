@@ -627,7 +627,7 @@ export function extractTableFromHTML(
       if (parseNumbers && /^-?\d+\.?\d*$/.test(cellContent.trim())) {
         const numValue = parseFloat(cellContent);
         if (!isNaN(numValue)) {
-          cellContent = numValue;
+          cellContent = numValue.toString();
         }
       }
 

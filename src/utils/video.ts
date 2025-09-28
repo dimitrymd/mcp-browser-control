@@ -1,5 +1,5 @@
 import { WebDriver } from 'selenium-webdriver';
-import { VideoElement, VideoPlaybackState, VideoIssue, VideoPerformanceMetrics } from '../types/index.js';
+import { VideoElement, VideoPlaybackState, VideoIssue, VideoPerformanceMetrics, VideoQualityMetrics } from '../types/index.js';
 import winston from 'winston';
 
 /**
@@ -77,7 +77,7 @@ export async function extractVideoElementInfo(
     return {
       selector,
       tagName: 'video',
-      ...videoInfo
+      ...(videoInfo as any)
     };
   } catch (error) {
     logger?.warn('Failed to extract video element info', { selector, error });

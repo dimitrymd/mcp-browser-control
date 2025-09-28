@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "browser-control": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "LOG_LEVEL": "warn",
+        "HEADLESS": "true",
+        "BROWSER_TYPE": "chrome",
+        "MAX_SESSIONS": "3"
+      }
+    }
+  }
+}

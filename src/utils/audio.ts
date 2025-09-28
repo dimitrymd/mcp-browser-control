@@ -117,7 +117,7 @@ export async function extractAudioElementInfo(
     return {
       selector,
       tagName: tagName.toLowerCase() as 'audio' | 'video',
-      ...audioInfo
+      ...(audioInfo as any)
     };
   } catch (error) {
     logger?.warn('Failed to extract audio element info', { selector, error });

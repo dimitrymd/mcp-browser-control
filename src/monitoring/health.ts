@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 export interface HealthCheck {
   name: string;
   status: 'healthy' | 'unhealthy' | 'degraded';
-  message?: string;
+  message?: string | undefined;
   duration: number;
   timestamp: number;
   metadata?: Record<string, any>;

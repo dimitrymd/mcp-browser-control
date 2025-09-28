@@ -91,7 +91,7 @@ When connected to the MCP server, you can use these tools:
 - `extract_text` - Extract text from elements
 - `extract_attributes` - Get element attributes
 - `extract_links` - Extract all links from page
-- `capture_screenshot` - Take page screenshots
+- `take_screenshot` - Take page screenshots (saved to local `screenshots/` directory)
 
 ### Session Management
 - `create_session` - Create new browser session

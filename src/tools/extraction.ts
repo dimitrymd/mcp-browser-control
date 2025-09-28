@@ -17,6 +17,8 @@ import { htmlToText, htmlToMarkdown, cleanText } from '../utils/converters.js';
 import { ValidationError, createErrorResponse } from '../utils/errors.js';
 import { normalizeSelector } from '../utils/selectors.js';
 import winston from 'winston';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class ExtractionTools {
   private sessionManager: SessionManager;
@@ -137,7 +139,7 @@ export class ExtractionTools {
     this.logger.info('Executing take_screenshot tool', { params, sessionId });
 
     try {
-      const { fullPage = false, selector, format = 'png', quality } = this.validateTakeScreenshotParams(params);
+      const { fullPage = false, selector, format = 'png', quality, path: customPath } = this.validateTakeScreenshotParams(params);
       const actualSessionId = sessionId || await this.getDefaultSession();
       const session = this.sessionManager.getSession(actualSessionId);
 
@@ -155,9 +157,35 @@ export class ExtractionTools {
         dimensions = size;
       }
 
+      // Generate filename and save to local directory
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = customPath || `screenshot-${timestamp}.${format === 'base64' ? 'png' : format}`;
+      const screenshotsDir = path.join(process.cwd(), 'screenshots');
+      const filePath = path.join(screenshotsDir, filename);
+
+      // Ensure screenshots directory exists
+      if (!fs.existsSync(screenshotsDir)) {
+        fs.mkdirSync(screenshotsDir, { recursive: true });
+      }
+
+      // Save screenshot to file
+      if (format === 'base64') {
+        // For base64 format, we still save as PNG but return base64 data
+        fs.writeFileSync(filePath, screenshot, 'base64');
+      } else {
+        // For png/jpeg formats, save the base64 data as binary
+        fs.writeFileSync(filePath, screenshot, 'base64');
+      }
+
+      this.logger.info(`Screenshot saved to: ${filePath}`);
+
       return {
         status: 'success',
-        data: { data: screenshot, dimensions }
+        data: {
+          data: format === 'base64' ? screenshot : `Screenshot saved to ${filePath}`,
+          path: filePath,
+          dimensions
+        }
       };
     } catch (error) {
       return createErrorResponse(error instanceof Error ? error : new Error('Screenshot failed'));

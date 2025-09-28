@@ -1,5 +1,6 @@
 import { URL } from 'url';
 import path from 'path';
+import crypto from 'crypto';
 import { ValidationError } from '../utils/errors.js';
 
 /**

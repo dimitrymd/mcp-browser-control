@@ -361,7 +361,7 @@ export class AuthenticationMiddleware {
       issuer: this.config.jwt.issuer,
       audience: this.config.jwt.audience,
       expiresIn: this.config.jwt.expiresIn
-    });
+    } as jwt.SignOptions);
   }
 
   /**

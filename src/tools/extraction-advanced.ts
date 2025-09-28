@@ -1045,7 +1045,7 @@ export class AdvancedExtractionTools {
       `);
 
       this.logger.info('Complete page data extraction completed', {
-        ...pageData,
+        pageData,
         duration: Date.now() - startTime,
         sessionId: actualSessionId
       });
