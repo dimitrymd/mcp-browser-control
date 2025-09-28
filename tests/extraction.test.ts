@@ -111,8 +111,8 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('<html>');
-      expect(result.data?.content).toContain('Main Title');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.html/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.html$/);
       expect(result.data?.metadata).toEqual({
         title: 'Test Page',
         url: 'https://example.com/test',
@@ -130,9 +130,13 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('Main Title');
-      expect(result.data?.content).toContain('Sample paragraph text');
-      expect(result.data?.content).not.toContain('<html>');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.txt/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.txt$/);
+      expect(result.data?.metadata).toEqual({
+        title: 'Test Page',
+        url: 'https://example.com/test',
+        length: expect.any(Number)
+      });
     });
 
     it('should extract page content as markdown', async () => {
@@ -145,8 +149,13 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('# Main Title');
-      expect(result.data?.content).toContain('Sample paragraph text');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.md/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.md$/);
+      expect(result.data?.metadata).toEqual({
+        title: 'Test Page',
+        url: 'https://example.com/test',
+        length: expect.any(Number)
+      });
     });
 
     it('should extract specific element content', async () => {
@@ -160,7 +169,13 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('test-element');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.html/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.html$/);
+      expect(result.data?.metadata).toEqual({
+        title: 'Test Page',
+        url: 'https://example.com/test',
+        length: expect.any(Number)
+      });
     });
 
     it('should validate format parameter', async () => {
@@ -325,7 +340,8 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.takeScreenshot(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.data).toBe('base64ScreenshotData');
+      expect(result.data?.data).toMatch(/Screenshot saved to.*browser-control\/screenshots.*\.png/);
+      expect(result.data?.path).toMatch(/browser-control\/screenshots.*\.png$/);
       expect(result.data?.dimensions).toEqual({ width: 1920, height: 1080 });
       expect(mockDriver.takeScreenshot).toHaveBeenCalled();
     });
@@ -340,7 +356,8 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.takeScreenshot(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.data).toBe('base64ScreenshotData');
+      expect(result.data?.data).toMatch(/Screenshot saved to.*browser-control\/screenshots.*\.png/);
+      expect(result.data?.path).toMatch(/browser-control\/screenshots.*\.png$/);
       expect(result.data?.dimensions).toEqual({ width: 100, height: 50 });
     });
 
@@ -354,7 +371,8 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.takeScreenshot(pngParams, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.data).toBe('base64ScreenshotData');
+      expect(result.data?.data).toMatch(/Screenshot saved to.*browser-control\/screenshots.*\.png/);
+      expect(result.data?.path).toMatch(/browser-control\/screenshots.*\.png$/);
     });
 
     it('should validate format parameter', async () => {
@@ -477,10 +495,13 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('Title');
-      expect(result.data?.content).toContain('Paragraph with bold text');
-      expect(result.data?.content).not.toContain('<h1>');
-      expect(result.data?.content).not.toContain('<strong>');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.txt/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.txt$/);
+      expect(result.data?.metadata).toEqual({
+        title: 'Test Page',
+        url: 'https://example.com/test',
+        length: expect.any(Number)
+      });
     });
 
     it('should properly convert HTML to markdown', async () => {
@@ -503,11 +524,13 @@ describe('ExtractionTools', () => {
       const result = await extractionTools.getPageContent(params, sessionId);
 
       expect(result.status).toBe('success');
-      expect(result.data?.content).toContain('# Main Title');
-      expect(result.data?.content).toContain('## Subtitle');
-      expect(result.data?.content).toContain('**bold**');
-      expect(result.data?.content).toContain('*italic*');
-      expect(result.data?.content).toContain('[Link text](https://example.com)');
+      expect(result.data?.content).toMatch(/Page content saved to.*browser-control\/pagecache.*\.md/);
+      expect(result.data?.path).toMatch(/browser-control\/pagecache.*\.md$/);
+      expect(result.data?.metadata).toEqual({
+        title: 'Test Page',
+        url: 'https://example.com/test',
+        length: expect.any(Number)
+      });
     });
   });
 });
