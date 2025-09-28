@@ -12,7 +12,8 @@ A complete, enterprise-grade MCP (Model Context Protocol) server for browser aut
 - **📺 Complete Media Platform**: Audio + Video testing with sync analysis and performance profiling
 - **🏢 Enterprise-Grade Architecture**: Authentication, session pooling, monitoring, and scaling
 - **🔒 Advanced Security**: Multi-layer validation, XSS prevention, and role-based access control
-- **📊 Professional Data Extraction**: Advanced table processing, structured data extraction, and analysis
+- **📊 Professional Data Extraction**: Advanced table processing, structured data extraction, and CSV export
+- **💾 Intelligent Content Caching**: Automatic page content and screenshot caching for large-scale analysis
 - **🪟 Multi-Window Management**: Enterprise layout algorithms and window coordination
 - **📡 Network Monitoring**: HAR-compatible request capture and performance analysis
 - **⚡ Performance Profiling**: FPS monitoring, jank detection, and optimization recommendations
@@ -300,7 +301,7 @@ Type text into input elements with clearing and delay options.
 ### Content Extraction Tools (5 tools)
 
 #### get_page_content
-Extract page content in HTML, text, or markdown format.
+Extract page content in HTML, text, or markdown format. Large page content is automatically saved to the `pagecache/` directory with timestamped filenames to avoid token limitations.
 
 ```json
 {
@@ -311,6 +312,49 @@ Extract page content in HTML, text, or markdown format.
   }
 }
 ```
+
+**Response includes:**
+- `content`: Either the page content (small pages) or save location message (large pages)
+- `path`: Full path to cached file (for large pages)
+- `metadata`: Page title, URL, and content length
+
+**Parameters:**
+- `format`: Content format (`html`, `text`, `markdown`) - defaults to `text`
+- `selector` (optional): CSS selector to extract specific element content
+- `includeHidden` (optional): Include hidden elements - defaults to `false`
+
+**Page Caching:**
+Large pages exceeding token limits are automatically saved to `pagecache/page-{hostname}-{timestamp}.{ext}` for later analysis.
+
+## Advanced Data Extraction & Market Intelligence
+
+### **Marketplace Data Extraction**
+The MCP Browser Control Server enables sophisticated **marketplace intelligence** and **competitive analysis**:
+
+#### **Multi-Page Data Collection**
+- **Search Result Processing**: Extract listings across pagination
+- **Category-Specific Filtering**: Focus on relevant product categories
+- **Structured Data Extraction**: Convert unstructured listings to organized data
+- **CSV Export**: Ready-to-analyze datasets for business intelligence
+
+#### **Real-World Example: Daewoo Matiz Market Analysis**
+Our platform successfully extracted comprehensive vehicle listings from 999.md:
+- **Search Query**: "Daewoo Matiz" across 809 total results
+- **Data Extracted**: 13 actual vehicle listings with specifications
+- **CSV Output**: Structured data with price, mileage, year, transmission, fuel type
+- **Market Intelligence**: Price ranges, condition analysis, market trends
+
+```csv
+Make,Model,Year,Price,Currency,Mileage_km,Transmission,Fuel,Description,Source
+Daewoo,Matiz,2008,1400,EUR,243000,Manual,Gasoline,"Daewoo Matiz an. 2008",999.md
+Daewoo,Matiz,2006,1599,EUR,139,Manual,Gasoline,"Daewoo Matiz an. 2006",999.md
+```
+
+#### **Business Intelligence Applications**
+- **Competitive Analysis**: Monitor competitor pricing and inventory
+- **Market Research**: Track product availability and pricing trends
+- **Lead Generation**: Extract business contact information and opportunities
+- **Content Analysis**: Analyze website content and structure across competitors
 
 #### take_screenshot
 Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `screenshots/` directory with timestamped filenames.
@@ -767,6 +811,7 @@ mcp-browser-control/
 ├── dist/                      # Compiled TypeScript output
 ├── logs/                      # Server logs
 ├── screenshots/               # 📸 Auto-saved screenshot files
+├── pagecache/                 # 📄 Auto-saved page content files
 └── cache/                     # Intelligent caching storage
 ```
 

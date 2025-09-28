@@ -1,0 +1,14 @@
+Make,Model,Year,Price,Currency,Mileage_km,Transmission,Fuel,Description,Source
+Daewoo,Matiz,2008,1400,EUR,243000,Manual,Gasoline,"Daewoo Matiz an. 2008",999.md
+Daewoo,Matiz,2007,999,EUR,223000,Manual,Gasoline,"Daewoo Matiz an. 2007",999.md
+Daewoo,Matiz,2008,850,EUR,198500,Manual,Gasoline,"Daewoo Matiz an. 2008",999.md
+Daewoo,Matiz,2007,20000,MDL,98000,Manual,Gasoline,"Daewoo Matiz an. 2007",999.md
+Daewoo,Matiz,2006,1599,EUR,139,Manual,Gasoline,"Daewoo Matiz an. 2006",999.md
+Daewoo,Matiz,2006,1300,EUR,23000,Manual,Gasoline,"Daewoo Matiz an. 2006",999.md
+Daewoo,Matiz,2006,1599,EUR,139,Manual,Gasoline,"Daewoo Matiz an. 2006 (duplicate)",999.md
+Daewoo,Matiz,2014,1100,EUR,190000,Manual,Gasoline,"Daewoo Matiz an. 2014",999.md
+Daewoo,Matiz,2010,1000,USD,140000,Manual,Gasoline,"Daewoo Matiz an. 2010",999.md
+Daewoo,Matiz,2006,1400,EUR,Unknown,Manual,Gasoline,"Daewoo Matiz an. 2006 (first payment 100 EUR)",999.md
+Daewoo,Matiz,1998,800,EUR,113000,Manual,Gasoline,"Daewoo Matiz an. 1998",999.md
+Daewoo,Matiz,2003,100,EUR,Unknown,Manual,Gasoline,"Daewoo Matiz 2003",999.md
+Daewoo,Matiz,1999,1,EUR,Unknown,Manual,Gasoline,"Dezmembrez Daewoo Matiz 1999 (parts only)",999.md
