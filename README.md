@@ -324,7 +324,7 @@ Extract page content in HTML, text, or markdown format. Large page content is au
 - `includeHidden` (optional): Include hidden elements - defaults to `false`
 
 **Page Caching:**
-Large pages exceeding token limits are automatically saved to `pagecache/page-{hostname}-{timestamp}.{ext}` for later analysis.
+Large pages exceeding token limits are automatically saved to `browser-control/pagecache/page-{hostname}-{timestamp}.{ext}` in your current working project for later analysis.
 
 ## Advanced Data Extraction & Market Intelligence
 
@@ -357,7 +357,7 @@ Daewoo,Matiz,2006,1599,EUR,139,Manual,Gasoline,"Daewoo Matiz an. 2006",999.md
 - **Content Analysis**: Analyze website content and structure across competitors
 
 #### take_screenshot
-Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `screenshots/` directory with timestamped filenames.
+Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `browser-control/screenshots/` directory in your current working project with timestamped filenames.
 
 ```json
 {
@@ -372,7 +372,7 @@ Capture screenshots of pages or specific elements. Screenshots are automatically
 
 **Response includes:**
 - `data`: Message indicating where the screenshot was saved
-- `path`: Full path to the saved screenshot file
+- `path`: Full path to the saved screenshot file in `browser-control/screenshots/`
 - `dimensions`: Width and height of the captured image
 
 **Parameters:**

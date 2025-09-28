@@ -64,11 +64,12 @@ export class ExtractionTools {
       const url = await session.driver.getCurrentUrl();
       const title = await session.driver.getTitle();
 
-      // Generate filename and save to local pagecache directory
+      // Generate filename and save to browser-control subdirectory
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const hostname = new URL(url).hostname.replace(/[^a-zA-Z0-9-]/g, '-');
       const filename = `page-${hostname}-${timestamp}.${format === 'html' ? 'html' : format === 'markdown' ? 'md' : 'txt'}`;
-      const pagecacheDir = path.join(process.cwd(), 'pagecache');
+      const browserControlDir = path.join(process.cwd(), 'browser-control');
+      const pagecacheDir = path.join(browserControlDir, 'pagecache');
       const filePath = path.join(pagecacheDir, filename);
 
       // Ensure pagecache directory exists
@@ -175,10 +176,11 @@ export class ExtractionTools {
         dimensions = size;
       }
 
-      // Generate filename and save to local directory
+      // Generate filename and save to browser-control subdirectory
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = customPath || `screenshot-${timestamp}.${format === 'base64' ? 'png' : format}`;
-      const screenshotsDir = path.join(process.cwd(), 'screenshots');
+      const browserControlDir = path.join(process.cwd(), 'browser-control');
+      const screenshotsDir = path.join(browserControlDir, 'screenshots');
       const filePath = path.join(screenshotsDir, filename);
 
       // Ensure screenshots directory exists
