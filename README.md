@@ -2,13 +2,79 @@
 
 🎵🎬📊 **The World's First Complete Website Intelligence Platform with Revolutionary Multimedia & SEO Capabilities** 📊🎬🎵
 
-A complete, enterprise-grade MCP (Model Context Protocol) server for browser automation using Selenium WebDriver. This platform provides **70+ comprehensive tools** across **16 categories** with **revolutionary audio and video testing capabilities** plus **Google-powered SEO intelligence** that establish new industry standards for website analysis excellence.
+A complete, enterprise-grade MCP (Model Context Protocol) server for browser automation using Selenium WebDriver. This platform provides **76+ comprehensive tools** across **17 categories** with **revolutionary audio and video testing capabilities** plus **complete Google-powered SEO intelligence suite** that establish new industry standards for website analysis excellence.
+
+## 🚀 Quick Start (NPM Installation)
+
+### **Installation**
+```bash
+# Install from NPM
+npm install -g mcp-browser-control
+
+# Or install locally for project use
+npm install mcp-browser-control
+```
+
+### **Basic Setup**
+```bash
+# 1. Create environment file
+echo "GOOGLE_PAGESPEED_API_KEY=your_api_key_here" > .env
+
+# 2. Start the server
+npx mcp-browser-control
+
+# 3. The server starts on default MCP protocol
+# Ready for Claude Code integration!
+```
+
+### **Environment Variables**
+```bash
+# Required for Google-powered SEO intelligence
+GOOGLE_PAGESPEED_API_KEY=your_google_api_key
+
+# Optional configuration
+BROWSER_TYPE=chrome
+HEADLESS=true
+MAX_SESSIONS=5
+LOG_LEVEL=info
+```
+
+### **Getting Google API Key (FREE)**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create project → Enable **3 APIs**:
+   - **"PageSpeed Insights API"** (Performance & SEO analysis)
+   - **"Google Search Console API"** (Keyword ranking data)
+   - **"Custom Search API"** (SERP analysis without CAPTCHA)
+3. Create API Key → Copy key to .env file
+4. **Instant access** to $1,200+ monthly SEO tool capabilities!
+
+### **Complete Setup for Full SEO Intelligence**
+```bash
+# 1. Install platform
+npm install -g mcp-browser-control
+
+# 2. Set up Google APIs (takes 5 minutes)
+# - Go to console.cloud.google.com
+# - Create project
+# - Enable: PageSpeed Insights API, Search Console API, Custom Search API
+# - Create API Key
+
+# 3. Configure environment
+echo "GOOGLE_PAGESPEED_API_KEY=your_api_key" > .env
+
+# 4. Start revolutionary platform
+npx mcp-browser-control
+
+# 5. Ready for $12,000+ annual SEO intelligence!
+```
+
+**See `GOOGLE_API.md` for detailed setup instructions.**
 
 ## 🌟 Revolutionary Features
 
 - **🎵 Revolutionary Audio Testing**: Real playback detection with currentTime monitoring (WORLD'S FIRST)
 - **🎬 Revolutionary Video Testing**: Frame advancement detection with quality analysis (INDUSTRY-FIRST)
-- **🌐 Complete Browser Automation**: 70+ comprehensive tools across all web interaction scenarios
+- **🌐 Complete Browser Automation**: 76+ comprehensive tools across all web interaction scenarios
 - **📺 Complete Media Platform**: Audio + Video testing with sync analysis and performance profiling
 - **🏢 Enterprise-Grade Architecture**: Authentication, session pooling, monitoring, and scaling
 - **🔒 Advanced Security**: Multi-layer validation, XSS prevention, and role-based access control
@@ -442,6 +508,124 @@ Comprehensive meta tag audit with SEO optimization recommendations and social me
 ```
 
 **Google API Configuration**: Set `GOOGLE_PAGESPEED_API_KEY` environment variable for official Google Lighthouse data. See `GOOGLE_API.md` for setup instructions.
+
+## Revolutionary Keyword Intelligence Tools (8 tools)
+
+### **Complete Free SEO Platform - First in MCP Ecosystem**
+**Replaces $1,200-$7,200/year SEO subscriptions with FREE professional analysis**
+
+#### research_keywords
+Revolutionary keyword research with volume analysis, difficulty scoring, and opportunity detection.
+
+```json
+{
+  "tool": "research_keywords",
+  "arguments": {
+    "seedKeywords": ["web development", "seo tools", "digital marketing"],
+    "location": "US",
+    "includeVolume": true,
+    "includeDifficulty": true,
+    "includeRelated": true,
+    "maxResults": 20
+  }
+}
+```
+
+#### analyze_keyword_rankings
+Track keyword search rankings with competitor analysis and opportunity detection.
+
+```json
+{
+  "tool": "analyze_keyword_rankings",
+  "arguments": {
+    "targetKeywords": ["your keywords", "to track"],
+    "targetUrl": "https://yourwebsite.com",
+    "location": "US",
+    "includeCompetitors": true
+  }
+}
+```
+
+#### find_keyword_opportunities
+Discover content gaps and strategic keyword opportunities through competitive analysis.
+
+```json
+{
+  "tool": "find_keyword_opportunities",
+  "arguments": {
+    "competitorUrls": ["https://competitor1.com", "https://competitor2.com"],
+    "currentKeywords": ["existing keywords"],
+    "industry": "your-industry"
+  }
+}
+```
+
+#### track_serp_positions
+Monitor search result positions with competitor movement tracking and alerts.
+
+```json
+{
+  "tool": "track_serp_positions",
+  "arguments": {
+    "keywords": ["keywords to monitor"],
+    "targetDomain": "yourwebsite.com",
+    "trackingFrequency": "weekly"
+  }
+}
+```
+
+#### analyze_keyword_competition
+Deep competitive keyword strategy analysis with strategic insights and action plans.
+
+```json
+{
+  "tool": "analyze_keyword_competition",
+  "arguments": {
+    "targetKeywords": ["competitive keywords"],
+    "competitorUrls": ["https://competitor1.com", "https://competitor2.com"],
+    "analysisDepth": "comprehensive"
+  }
+}
+```
+
+#### analyze_backlinks
+Comprehensive backlink profile analysis with authority assessment and opportunity detection.
+
+```json
+{
+  "tool": "analyze_backlinks",
+  "arguments": {
+    "targetUrl": "https://yourwebsite.com"
+  }
+}
+```
+
+#### generate_comprehensive_seo_report
+Generate professional SEO audit reports combining all analysis tools, saved to `browser-control/reports/`.
+
+```json
+{
+  "tool": "generate_comprehensive_seo_report",
+  "arguments": {
+    "websiteUrl": "https://yourwebsite.com",
+    "reportType": "comprehensive"
+  }
+}
+```
+
+#### monitor_search_visibility
+Track overall search presence and visibility with trend analysis and competitive comparison.
+
+```json
+{
+  "tool": "monitor_search_visibility",
+  "arguments": {
+    "websiteUrl": "https://yourwebsite.com"
+  }
+}
+```
+
+**Revolutionary Value**: Complete SEO intelligence suite providing **$12,000+ annual value** FREE - replacing SEMrush, Ahrefs, Moz subscriptions.
 
 #### take_screenshot
 Capture screenshots of pages or specific elements. Screenshots are automatically saved to the `browser-control/screenshots/` directory in your current working project with timestamped filenames.

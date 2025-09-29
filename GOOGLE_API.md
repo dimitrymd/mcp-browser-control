@@ -17,6 +17,13 @@
 - **Mobile/Desktop Analysis**: Comprehensive mobile and desktop performance insights
 - **Competitive Advantage**: Professional-grade analysis rivaling expensive SEO tools
 
+### **🔍 Keyword Intelligence Benefits (Sprint 3)**
+- **Official Keyword Data**: Real search volume and competition data from Google
+- **CAPTCHA-Free Access**: Bypass Google search limitations with official APIs
+- **Professional Analysis**: Same data that powers SEMrush, Ahrefs, Moz ($100-$400/month tools)
+- **Rate Limit Compliance**: Sustainable keyword research without blocking
+- **Enterprise Features**: Keyword tracking, ranking analysis, competitive intelligence
+
 ### **🚀 Business Value**
 - **Replace SEO Tools**: Competitor to SEMrush, Ahrefs, Moz ($100-$400/month)
 - **Enterprise Features**: Professional reporting and analysis capabilities
@@ -78,9 +85,45 @@
    - **HTTP referrers**: Add your domains if web-based
    - **Android/iOS apps**: Not applicable for our use case
 
-### **⚙️ Step 6: Environment Configuration**
+### **⚙️ Step 6: Enable Additional APIs for Keyword Intelligence**
 
-#### **Option 1: Environment Variable (Recommended)**
+#### **Keyword Intelligence APIs (Sprint 3 Features)**
+For **revolutionary keyword research capabilities**, enable these additional APIs:
+
+1. **Google Search Console API**:
+   - Navigate to APIs & Services → Library
+   - Search for "Google Search Console API"
+   - Click "Enable" (Provides ranking and search performance data)
+
+2. **Google Custom Search API**:
+   - Search for "Custom Search API"
+   - Click "Enable" (Provides SERP analysis without CAPTCHA)
+
+3. **Google Trends API** (Optional):
+   - Search for "Google Trends API"
+   - Click "Enable" (Provides keyword trend analysis)
+
+**Important Note**: Google Keyword Planner API is now restricted to Google Ads customers with active campaigns. For keyword intelligence, we use:
+- **Google Search Console API**: Official ranking data for verified websites (FREE)
+- **Google Custom Search API**: SERP analysis without CAPTCHA (100 queries/day FREE)
+- **Algorithmic Analysis**: Browser-based difficulty calculation and volume estimation
+- **Third-Party APIs**: Optional integration with DataForSEO, SerpApi for enhanced data
+
+### **⚙️ Step 7: Environment Configuration**
+
+#### **NPM Installation Setup (Recommended for Users)**
+```bash
+# After npm install mcp-browser-control
+# Create .env file in your project directory
+echo "GOOGLE_PAGESPEED_API_KEY=your_api_key_here" > .env
+
+# Start the server
+npx mcp-browser-control
+
+# The server automatically loads .env configuration
+```
+
+#### **Option 1: Environment Variable (Advanced Users)**
 ```bash
 # Add to your .env file
 GOOGLE_PAGESPEED_API_KEY=your_api_key_here

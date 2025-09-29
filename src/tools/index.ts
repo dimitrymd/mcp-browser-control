@@ -14,6 +14,7 @@ import { NetworkTools } from './network.js';
 import { PerformanceTools } from './performance.js';
 import { VideoTools } from './video.js';
 import { SEOPerformanceTools } from './seo-performance.js';
+import { KeywordIntelligenceTools } from './keyword-intelligence.js';
 import { SessionManager } from '../drivers/session.js';
 import winston from 'winston';
 
@@ -34,6 +35,7 @@ export interface ToolRegistry {
   performance: PerformanceTools;
   video: VideoTools;
   seoPerformance: SEOPerformanceTools;
+  keywordIntelligence: KeywordIntelligenceTools;
 }
 
 export function createToolRegistry(sessionManager: SessionManager, logger: winston.Logger): ToolRegistry {
@@ -53,7 +55,8 @@ export function createToolRegistry(sessionManager: SessionManager, logger: winst
     network: new NetworkTools(sessionManager, logger),
     performance: new PerformanceTools(sessionManager, logger),
     video: new VideoTools(sessionManager, logger),
-    seoPerformance: new SEOPerformanceTools(sessionManager, logger)
+    seoPerformance: new SEOPerformanceTools(sessionManager, logger),
+    keywordIntelligence: new KeywordIntelligenceTools(sessionManager, logger)
   };
 }
 
@@ -2129,6 +2132,98 @@ export const toolDefinitions = [
       },
       required: []
     }
+  },
+
+  // Sprint 3: Keyword Intelligence Tools
+  {
+    name: 'research_keywords',
+    description: 'REVOLUTIONARY: Free keyword research with volume analysis, difficulty scoring, and opportunity detection',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        seedKeywords: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of seed keywords to research and expand'
+        },
+        location: {
+          type: 'string',
+          default: 'US',
+          description: 'Geographic location for keyword research (US, UK, CA, etc.)'
+        },
+        language: {
+          type: 'string',
+          default: 'en',
+          description: 'Language for keyword research (en, es, fr, de, etc.)'
+        },
+        includeVolume: {
+          type: 'boolean',
+          default: true,
+          description: 'Include search volume estimates'
+        },
+        includeDifficulty: {
+          type: 'boolean',
+          default: true,
+          description: 'Include keyword difficulty analysis'
+        },
+        includeRelated: {
+          type: 'boolean',
+          default: true,
+          description: 'Include related keyword suggestions'
+        },
+        maxResults: {
+          type: 'number',
+          default: 50,
+          description: 'Maximum number of keywords to return'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: ['seedKeywords']
+    }
+  },
+  {
+    name: 'analyze_keyword_rankings',
+    description: 'Track keyword search rankings with competitor analysis and ranking opportunity detection',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        targetKeywords: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of keywords to track rankings for'
+        },
+        targetUrl: {
+          type: 'string',
+          description: 'Website URL to track rankings for'
+        },
+        location: {
+          type: 'string',
+          default: 'US',
+          description: 'Geographic location for search results'
+        },
+        device: {
+          type: 'string',
+          enum: ['desktop', 'mobile'],
+          default: 'desktop',
+          description: 'Device type for search results'
+        },
+        includeCompetitors: {
+          type: 'boolean',
+          default: true,
+          description: 'Include competitor ranking analysis'
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Browser session ID'
+        }
+      },
+      required: ['targetKeywords', 'targetUrl']
+    }
   }
 ];
 
@@ -2316,6 +2411,24 @@ export function executeTool(
       return tools.seoPerformance.auditMetaTags(params, sessionId);
     case 'analyze_seo_content':
       return tools.seoPerformance.analyzeSEOContent(params, sessionId);
+
+    // Sprint 3: Keyword Intelligence Tools
+    case 'research_keywords':
+      return tools.keywordIntelligence.researchKeywords(params, sessionId);
+    case 'analyze_keyword_rankings':
+      return tools.keywordIntelligence.analyzeKeywordRankings(params, sessionId);
+    case 'find_keyword_opportunities':
+      return tools.keywordIntelligence.findKeywordOpportunities(params, sessionId);
+    case 'track_serp_positions':
+      return tools.keywordIntelligence.trackSerpPositions(params, sessionId);
+    case 'analyze_keyword_competition':
+      return tools.keywordIntelligence.analyzeKeywordCompetition(params, sessionId);
+    case 'analyze_backlinks':
+      return tools.keywordIntelligence.analyzeBacklinks(params, sessionId);
+    case 'generate_comprehensive_seo_report':
+      return tools.keywordIntelligence.generateComprehensiveSEOReport(params, sessionId);
+    case 'monitor_search_visibility':
+      return tools.keywordIntelligence.monitorSearchVisibility(params, sessionId);
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);
