@@ -1,7 +1,7 @@
 {
   "name": "mcp-browser-control",
   "version": "1.0.0",
-  "description": "Revolutionary MCP Server with 68+ tools: Browser automation, Google-powered SEO intelligence, multimedia testing, and competitive analysis",
+  "description": "Revolutionary MCP Server with 76+ tools: Complete SEO intelligence suite, browser automation, Google-powered analysis, multimedia testing, and competitive intelligence",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
