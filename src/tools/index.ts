@@ -15,6 +15,7 @@ import { PerformanceTools } from './performance.js';
 import { VideoTools } from './video.js';
 import { SEOPerformanceTools } from './seo-performance.js';
 import { KeywordIntelligenceTools } from './keyword-intelligence.js';
+import { PremiumFeatureLoader, PremiumFeatures } from './premium-features.js';
 import { SessionManager } from '../drivers/session.js';
 import winston from 'winston';
 
@@ -36,6 +37,7 @@ export interface ToolRegistry {
   video: VideoTools;
   seoPerformance: SEOPerformanceTools;
   keywordIntelligence: KeywordIntelligenceTools;
+  premiumFeatures?: PremiumFeatures;
 }
 
 export function createToolRegistry(sessionManager: SessionManager, logger: winston.Logger): ToolRegistry {

@@ -415,3 +415,42 @@ test-credentials/
 local-overrides/config/google-service-account.json
 config/*.json
 browser-control/
+
+# PROPRIETARY: Professional Services (Competitive Advantage)
+# Keep premium features proprietary for professional service differentiation
+
+# PDF Generation Suite (Professional Premium Feature)
+src/tools/pdf-generation.ts
+src/templates/pdf/
+test-pdf-generation.js
+generate-*.js
+*pdf*.js
+
+# Generated professional reports (client confidential)
+*.pdf
+browser-control/reports/
+SOLARSSK-SEO.md
+YOUTUBE.md
+YOUTUBE-VS-PLAYMD.md
+
+# Professional service templates and branding (proprietary)
+templates/pdf/
+branding/
+client-templates/
+
+# Proprietary website design and strategy (competitive advantage)
+Funway_website/
+
+# Professional consulting reports and analysis (client confidential)
+*-deep.md
+VS-*.md
+mega-*.md
+funway-*.md
+PRISTINA.md
+PLAY.md
+backlinks.md
+solar-tech.md
+eureka-cad.md
+QUAR.md
+UNIPATH.md
+semrush.md
